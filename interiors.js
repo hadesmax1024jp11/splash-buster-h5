@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
-import {finish,glass} from './finishes.js';
+import {finish,glass,ornament} from './finishes.js';
 const palettes={kitchen:{wall:0xf8e8cf,floor:0xf4e6ce,wood:0xce9561,accent:0x79b6a2},living:{wall:0xf3dfc8,floor:0xbb8358,wood:0x8a5842,accent:0x89a99b}};
 const woods=new Set([0xce9561,0xbb8358,0x8a5842,0xc59669,0x93643f,0x79573e,0xa17c55,0xe5c298,0x9a7453,0xb18e5f,0xaf8759]);
 const fabrics=new Set([0x729a98,0x7aa5a0,0x91b8ad,0xe2b97a,0xe8dbc5,0xaabdb5]);
@@ -14,29 +14,29 @@ export function makeItem(type,theme,originalGeometry,originalMaterial){
   const key=theme+type;if(!templates.has(key)){
     const g=new T.Group();let shard;
     if(theme==='kitchen'){
-      if(type===1){shard=mat(0xd55c45,.3);cylinder(g,0,0,0,.46,.46,.93,shard);for(const y of [-.46,.46])cylinder(g,0,y,0,.48,.48,.045,0xcbd0cd);const tex=labelTexture('TOMATO','SOUP','#c9533c','●');const label=new T.Mesh(new T.CylinderGeometry(.466,.466,.72,32,1,true),new T.MeshStandardMaterial({map:tex,roughness:.5}));g.add(label);}
-      else if(type===2){shard=mat(0x70b6c6,.27);for(let i=0;i<3;i++){const profile=[new T.Vector2(.22,0),new T.Vector2(.28,.04),new T.Vector2(.46,.28),new T.Vector2(.48,.33),new T.Vector2(.43,.33),new T.Vector2(.22,.08)];const m=new T.Mesh(new T.LatheGeometry(profile,48),shard);m.position.y=-.5+i*.23;g.add(m);}}
-      else if(type===3||type===41){const isMilk=type===3;shard=mat(isMilk?0xeaf4ea:0xe5b56b);const tex=labelTexture(isMilk?'MILK':'OAT','FRESH & SIMPLE',isMilk?'#568cbd':'#cc8a45',isMilk?'◉':'✦');const front=new T.MeshStandardMaterial({map:tex,roughness:.8});const materials=[shard,shard,shard,shard,front,front];cube(g,0,-.03,0,.92,.9,.92,materials);if(isMilk){
+      if(type===1){shard=finish(0xc7ccce,'metal');cylinder(g,0,0,0,.46,.46,.93,shard);for(const y of [-.46,.46])cylinder(g,0,y,0,.48,.48,.045,0xcbd0cd);const tex=labelTexture('TOMATO','SOUP','#c9533c','●');const label=new T.Mesh(new T.CylinderGeometry(.466,.466,.72,32,1,true),new T.MeshPhysicalMaterial({map:tex,roughness:.3,clearcoat:.65,metalness:.12}));g.add(label);}
+      else if(type===2){shard=ornament(0x23678c);for(let i=0;i<3;i++){const profile=[new T.Vector2(.22,0),new T.Vector2(.28,.04),new T.Vector2(.46,.28),new T.Vector2(.48,.33),new T.Vector2(.43,.33),new T.Vector2(.22,.08)];const m=new T.Mesh(new T.LatheGeometry(profile,48),shard);m.position.y=-.5+i*.23;g.add(m);const rim=new T.Mesh(new T.TorusGeometry(.455,.014,8,48),finish(0xc6a45b,'metal'));rim.rotation.x=Math.PI/2;rim.position.y=-.17+i*.23;g.add(rim);}}
+      else if(type===3||type===41){const isMilk=type===3;shard=mat(isMilk?0xeaf4ea:0xe5b56b);const tex=labelTexture(isMilk?'MILK':'OAT','FRESH & SIMPLE',isMilk?'#568cbd':'#cc8a45',isMilk?'◉':'✦');const front=new T.MeshPhysicalMaterial({map:tex,roughness:.48,clearcoat:.35});const materials=[shard,shard,shard,shard,front,front];cube(g,0,-.03,0,.92,.9,.92,materials);if(isMilk){
  const shape=new T.Shape();shape.moveTo(-.46,-.06);shape.lineTo(0,.12);shape.lineTo(.46,-.06);shape.closePath();
  const roof=new T.Mesh(new T.ExtrudeGeometry(shape,{depth:.88,bevelEnabled:false}),finish(0xdce6e4,'paper'));roof.rotation.y=Math.PI/2;roof.position.set(-.44,.44,0);g.add(roof);
  cube(g,0,.55,0,.88,.035,.035,0x8aa9b2);
 }else cube(g,0,.45,0,.92,.04,.92,0xe3bd84);}
       else{
        const colors={11:0xb85c23,12:0x9c3441,13:0xddae37,14:0x963c28,15:0xc8802b,16:0x653f55};
-       shard=finish(colors[type]||0xb57636,'ceramic');
+       shard=glass(colors[type]||0xb57636);shard.opacity=.8;shard.roughness=.12;
        const body=new T.Mesh(new T.CylinderGeometry(.405,.42,.76,48),shard);body.position.y=-.04;g.add(body);
        const shell=new T.Mesh(new T.LatheGeometry([new T.Vector2(.35,-.48),new T.Vector2(.45,-.43),new T.Vector2(.45,.23),new T.Vector2(.36,.36),new T.Vector2(.36,.45)],64),glass());g.add(shell);
        cylinder(g,0,.445,0,.39,.39,.09,finish(0xbfa66d,'metal'));
        for(let i=0;i<32;i++){const ridge=cube(g,Math.cos(i*Math.PI/16)*.386,.445,Math.sin(i*Math.PI/16)*.386,.012,.065,.015,finish(0x9c8557,'metal'));ridge.rotation.y=-i*Math.PI/16;}
        const label=labelTexture('PANTRY','FRUIT PRESERVE','#5a6353','◆');
-       const wrap=new T.Mesh(new T.CylinderGeometry(.454,.454,.32,48,1,true),new T.MeshStandardMaterial({map:label,roughness:.85}));wrap.position.y=-.06;g.add(wrap);
+       const wrap=new T.Mesh(new T.CylinderGeometry(.454,.454,.32,48,1,true),new T.MeshPhysicalMaterial({map:label,roughness:.4,clearcoat:.5}));wrap.position.y=-.06;g.add(wrap);
       }
     }else{
-      const colors=[0xe2a67e,0x91b2b6,0xcfa0a9,0xb5b96e,0x8caaa0,0xc49062];shard=mat(colors[type%colors.length],.3);
-      if(type===3){shard=mat(0x9bb5bd);for(let i=0;i<3;i++){const col=[0xc46e54,0x7094a1,0xb5a274][i];cube(g,0,-.33+i*.33,0,.92,.29,.84,0xfff4d7);cube(g,0,-.47+i*.33,0,.98,.04,.9,col);cube(g,0,-.19+i*.33,0,.98,.04,.9,col);cube(g,0,-.33+i*.33,-.43,.98,.3,.055,col);cube(g,-.24,-.33+i*.33,-.465,.035,.19,.02,0xf9da99);}}
-      else if(type===41){shard=mat(0xc59669);cube(g,0,0,0,.93,.93,.93,shard);for(let i=0;i<3;i++)cube(g,0,-.3+i*.3,-.475,.94,.025,.012,0x93643f);cube(g,0,.23,-.49,.4,.14,.018,0x79573e);cube(g,0,.23,-.501,.25,.045,.01,0x3f3b32);}
+      const colors=[0xe2a67e,0x91b2b6,0xcfa0a9,0xb5b96e,0x8caaa0,0xc49062];shard=ornament([0x29577d,0x39785d,0x8d4260,0x8c6337][type%4]);
+      if(type===3){shard=ornament(0x294b65,'leather');for(let i=0;i<3;i++){const col=[0xc46e54,0x7094a1,0xb5a274][i];cube(g,0,-.33+i*.33,0,.92,.29,.84,0xfff4d7);cube(g,0,-.47+i*.33,0,.98,.04,.9,ornament(col,'leather'));cube(g,0,-.19+i*.33,0,.98,.04,.9,ornament(col,'leather'));cube(g,0,-.33+i*.33,-.43,.98,.3,.055,ornament(col,'leather'));cube(g,-.24,-.33+i*.33,-.465,.035,.19,.02,0xf9da99);}}
+      else if(type===41){shard=finish(0xc59669,'wood');shard.clearcoat=.65;shard.roughness=.3;cube(g,0,0,0,.93,.93,.93,shard);for(let i=0;i<3;i++)cube(g,0,-.3+i*.3,-.475,.94,.025,.012,0x93643f);cube(g,0,.23,-.49,.4,.14,.018,0x79573e);cube(g,0,.23,-.501,.25,.045,.01,0x3f3b32);}
       else if(type===2){shard=mat(0xe9c98e);shard=finish(0xe9ddc3,'fabric');cylinder(g,0,-.45,0,.32,.36,.1,0xa17c55);cylinder(g,0,-.16,0,.055,.055,.52,0xa17c55);cylinder(g,0,.23,0,.24,.46,.5,shard);cylinder(g,0,.49,0,.23,.23,.02,0xfff5d6);}
-      else{const profile=[new T.Vector2(.22,-.5),new T.Vector2(.35,-.45),new T.Vector2(.46,-.2),new T.Vector2(.43,.12),new T.Vector2(.26,.35),new T.Vector2(.24,.5),new T.Vector2(.18,.5),new T.Vector2(.19,.35)];const m=new T.Mesh(new T.LatheGeometry(profile,64),shard);g.add(m);const lip=new T.Mesh(new T.TorusGeometry(.214,.026,12,64),shard);lip.rotation.x=Math.PI/2;lip.position.y=.48;g.add(lip);const interior=new T.Mesh(new T.CircleGeometry(.185,48),mat(0x3b342e));interior.rotation.x=-Math.PI/2;interior.position.y=.31;g.add(interior);}
+      else{const profile=[new T.Vector2(.22,-.5),new T.Vector2(.35,-.45),new T.Vector2(.46,-.2),new T.Vector2(.43,.12),new T.Vector2(.26,.35),new T.Vector2(.24,.5),new T.Vector2(.18,.5),new T.Vector2(.19,.35)];const m=new T.Mesh(new T.LatheGeometry(profile,64),shard);g.add(m);const lip=new T.Mesh(new T.TorusGeometry(.214,.026,12,64),finish(0xc5a05b,'metal'));lip.rotation.x=Math.PI/2;lip.position.y=.48;g.add(lip);const interior=new T.Mesh(new T.CircleGeometry(.185,48),mat(0x3b342e));interior.rotation.x=-Math.PI/2;interior.position.y=.31;g.add(interior);}
     }
     g.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true;}});g.shardMaterial=shard;templates.set(key,g);
   }

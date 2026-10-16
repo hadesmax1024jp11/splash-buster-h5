@@ -21,3 +21,23 @@ export function finish(color,kind='ceramic'){
  return new T.MeshPhysicalMaterial({color,map:texture,bumpMap:texture,bumpScale:kind==='fabric'?.018:kind==='wood'?.004:.0015,roughness:rough,metalness:kind==='metal'?.88:0,clearcoat:kind==='ceramic'?.55:kind==='wood'?.16:0,clearcoatRoughness:.2,sheen:kind==='fabric'?1:0,sheenRoughness:.85,sheenColor:new T.Color(color),envMapIntensity:kind==='metal'?1.3:.65});
 }
 export function glass(color=0xffffff){return new T.MeshPhysicalMaterial({color,metalness:0,roughness:.09,transparent:true,opacity:.32,depthWrite:false,ior:1.48,clearcoat:1,envMapIntensity:1.8,side:T.DoubleSide});}
+
+const decorated=new Map();
+export function ornament(color=0x24567d,kind='porcelain'){
+ const key=kind+color;if(decorated.has(key))return decorated.get(key);
+ const c=document.createElement('canvas');c.width=c.height=512;const x=c.getContext('2d');
+ const ink='#'+new T.Color(color).getHexString();
+ x.fillStyle=kind==='leather'?ink:'#f5efda';x.fillRect(0,0,512,512);
+ x.strokeStyle=kind==='leather'?'#d7b86d':ink;x.fillStyle=x.strokeStyle;x.lineWidth=3;
+ for(const y of [18,30,482,494]){x.beginPath();x.moveTo(0,y);x.lineTo(512,y);x.stroke();}
+ for(let row=0;row<3;row++)for(let col=0;col<4;col++){
+  const cx=col*128+64+(row%2?32:0),cy=100+row*145;
+  x.save();x.translate(cx,cy);
+  for(let petal=0;petal<8;petal++){x.rotate(Math.PI/4);x.beginPath();x.ellipse(0,18,7,18,0,0,Math.PI*2);x.stroke();}
+  x.beginPath();x.arc(0,0,6,0,Math.PI*2);x.fill();
+  x.beginPath();x.moveTo(0,40);x.bezierCurveTo(45,15,50,55,58,60);x.stroke();x.restore();
+ }
+ const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;tex.anisotropy=8;
+ const m=finish(0xffffff,kind==='leather'?'wood':'ceramic');m.map=tex;m.roughness=kind==='leather'?.42:.17;m.clearcoat=1;m.clearcoatRoughness=.12;m.envMapIntensity=1.5;
+ decorated.set(key,m);return m;
+}
