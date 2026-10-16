@@ -1,5 +1,6 @@
 import * as T from 'three';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
+import {makeExtraRoom,makeExtraItem} from './extra-rooms.js';
 import {finish,glass,ornament} from './finishes.js';
 const palettes={kitchen:{wall:0xf8e8cf,floor:0xf4e6ce,wood:0xce9561,accent:0x79b6a2},living:{wall:0xf3dfc8,floor:0xbb8358,wood:0x8a5842,accent:0x89a99b}};
 const woods=new Set([0xce9561,0xbb8358,0x8a5842,0xc59669,0x93643f,0x79573e,0xa17c55,0xe5c298,0x9a7453,0xb18e5f,0xaf8759]);
@@ -11,6 +12,7 @@ function cylinder(g,x,y,z,r1,r2,h,color){const m=new T.Mesh(new T.CylinderGeomet
 function labelTexture(title,subtitle,color,icon){const c=document.createElement('canvas');c.width=256;c.height=256;const x=c.getContext('2d');x.fillStyle=color;x.fillRect(0,0,256,256);x.fillStyle='#fff7df';x.fillRect(8,9,240,238);x.fillStyle=color;x.fillRect(8,9,240,46);x.textAlign='center';x.font='900 30px Arial';x.fillText(title,128,107);x.font='bold 16px Arial';x.fillText(subtitle,128,210);x.strokeStyle=color;x.lineWidth=2;x.strokeRect(28,126,200,52);x.font='bold 15px Georgia';x.fillText('PREMIUM QUALITY',128,148);x.font='12px Georgia';x.fillText('NET WT. 400 g',128,169);for(let i=0;i<36;i++){x.fillStyle=i%3?'#37372f':'#fff7df';x.fillRect(71+i*3,224,2,14);}const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;return t;}
 const templates=new Map();
 export function makeItem(type,theme,originalGeometry,originalMaterial){
+  if(['bedroom','balcony','bathroom'].includes(theme))return makeExtraItem(type,theme);
   const key=theme+type;if(!templates.has(key)){
     const g=new T.Group();let shard;
     if(theme==='kitchen'){
@@ -44,7 +46,7 @@ export function makeItem(type,theme,originalGeometry,originalMaterial){
 }
 function plant(g,x,z){cylinder(g,x,-.97,z,.46,.34,1.05,0xc28b64);for(let i=0;i<7;i++){const leaf=new T.Mesh(new T.SphereGeometry(.55,24,16),mat(i%2?0x63956a:0x87aa70));leaf.scale.set(.55,1.4,.27);leaf.position.set(x+Math.sin(i*2.4)*.4,.05+i*.15,z+Math.cos(i*2.4)*.4);leaf.rotation.z=Math.sin(i*2.4)*.6;g.add(leaf);}}
 function window(g,x,z){cube(g,x,5,z,4.6,3.9,.2,0xfdf3df);cube(g,x,5,z-.14,4.15,3.45,.06,0xb5dce2);for(const dx of [-1,1])cube(g,x+dx*1.08,5,z-.2,.1,3.5,.1,0xfdf3df);cube(g,x,5,z-.21,4.2,.1,.1,0xfdf3df);cube(g,x,3,z-.3,5,.18,.6,0xfdf3df);}
-export function makeRoom(theme){const p=palettes[theme],g=new T.Group();cube(g,0,-1.73,5,70,.35,90,finish(p.floor,theme==='kitchen'?'stone':'wood'));cube(g,0,5.2,17,38,14,.35,p.wall);cube(g,-19,5,3,.3,14,28,p.wall);cube(g,19,5,3,.3,14,28,p.wall);cube(g,0,-1.25,16.75,38,.35,.15,0xfff5e3);
+export function makeRoom(theme){if(['bedroom','balcony','bathroom'].includes(theme))return makeExtraRoom(theme);const p=palettes[theme],g=new T.Group();cube(g,0,-1.73,5,70,.35,90,finish(p.floor,theme==='kitchen'?'stone':'wood'));cube(g,0,5.2,17,38,14,.35,p.wall);cube(g,-19,5,3,.3,14,28,p.wall);cube(g,19,5,3,.3,14,28,p.wall);cube(g,0,-1.25,16.75,38,.35,.15,0xfff5e3);
  if(theme==='kitchen'){
   for(let x=-17;x<=17;x+=2)cube(g,x,-1.545,3,.018,.012,55,0xd3c8b7);for(let z=-20;z<=30;z+=2)cube(g,0,-1.545,z,38,.012,.018,0xd3c8b7);
   for(let x=-11;x<=11;x+=3){cube(g,x,-.05,14,2.9,3,2.4,p.accent);cube(g,x,1.5,13.95,3.03,.2,2.6,finish(0xe8e4da,'stone'));cube(g,x-.65,0,12.76,1.23,2.55,.05,0xa3c6b5);cube(g,x+.65,0,12.76,1.23,2.55,.05,0xa3c6b5);cube(g,x,1.03,12.65,.55,.07,.07,0xaf8759);}

@@ -28,3 +28,5 @@ footer{bottom:max(24px,env(safe-area-inset-bottom));left:18px;right:auto}.ammo{h
 @media(max-height:650px){header{top:10px}.level-label{padding:5px 12px 7px;min-width:158px}.level-label strong{font-size:19px}.level-label b{font-size:26px}#progress{top:98px;height:20px}footer{bottom:18px}.ammo{height:67px}#hint{bottom:88px}}
 @media(max-width:360px){header{left:10px;right:10px;gap:7px}.level-label{min-width:150px}.icon{width:41px;height:43px}.card{padding:25px 16px}#levelGrid{gap:7px}}
 @media(prefers-reduced-motion:reduce){#combo,#fill{transition:none}.loading-track i{animation:none}}
+
+#levelGrid button{height:57px;font-size:19px}#levelGrid button small{display:block;font-size:9px;font-weight:700;letter-spacing:1px;margin-top:2px;opacity:.8}
