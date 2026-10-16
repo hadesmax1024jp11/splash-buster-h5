@@ -30,3 +30,7 @@ footer{bottom:max(24px,env(safe-area-inset-bottom));left:18px;right:auto}.ammo{h
 @media(prefers-reduced-motion:reduce){#combo,#fill{transition:none}.loading-track i{animation:none}}
 
 #levelGrid button{height:57px;font-size:19px}#levelGrid button small{display:block;font-size:9px;font-weight:700;letter-spacing:1px;margin-top:2px;opacity:.8}
+
+/* Persistent illustrated title screen. */
+.loading-title h1{font-size:clamp(32px,7vw,47px);line-height:1.08;letter-spacing:5px;margin:13px 0}.loading-title h1 em{font-size:1.45em}.loading-edition{letter-spacing:3px}.loading-title p{font-size:12px;letter-spacing:2px}.loading-status{left:15%;right:15%;bottom:max(4%,env(safe-area-inset-bottom))}.start-button{display:block;margin:12px 0 18px;font-size:21px;letter-spacing:3px;padding:15px 10px}.start-button:disabled{opacity:.65;cursor:wait}.loading-status small{display:block}.loading-art.ready .loading-track{display:none}.loading-status p{font-size:11px;letter-spacing:1px}.loading-shade{background:linear-gradient(180deg,#082c3c99,transparent 35%,transparent 65%,#102321e6)}
+@media(max-height:600px){.loading-title{top:3%}.loading-title h1{font-size:27px;margin:7px 0}.loading-title h1 em{font-size:1.35em}.loading-title p{font-size:10px;margin:5px 0}.loading-edition{font-size:9px}.loading-status{bottom:4%}.start-button{font-size:18px;padding:12px 8px;margin:8px 0 12px}.loading-status p{margin:7px 0!important}}
