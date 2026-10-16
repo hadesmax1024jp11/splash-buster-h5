@@ -1,5 +1,5 @@
 import * as C from './cannon-es.js';
-import {playableLevel,materialKind} from './rules.js';
+import {playableLevel,materialKind} from './rules.js?v=rooms-20261016';
 export class GamePhysics {
   constructor(level, settings, onClear=()=>{}, onImpact=()=>{}) {
     if(!level.originalAmmo)level=playableLevel(level);this.onImpact=onImpact;

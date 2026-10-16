@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
-import {makeExtraRoom,makeExtraItem} from './extra-rooms.js';
+import {makeExtraRoom,makeExtraItem} from './extra-rooms.js?v=rooms-20261016';
 import {finish,glass,ornament} from './finishes.js';
 const palettes={kitchen:{wall:0xf8e8cf,floor:0xf4e6ce,wood:0xce9561,accent:0x79b6a2},living:{wall:0xf3dfc8,floor:0xbb8358,wood:0x8a5842,accent:0x89a99b}};
 const woods=new Set([0xce9561,0xbb8358,0x8a5842,0xc59669,0x93643f,0x79573e,0xa17c55,0xe5c298,0x9a7453,0xb18e5f,0xaf8759]);
