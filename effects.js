@@ -3,6 +3,7 @@ import {finish} from './finishes.js';
 
 const edges={wood:finish(0xb28b60,'wood'),metal:finish(0xc3cbd0,'metal'),glass:finish(0xc6e9ec,'ceramic'),ceramic:finish(0xe5d9c2,'stone')};
 export function fragment(kind,material){
+ if(material.userData.solid)return new T.Mesh(new T.DodecahedronGeometry(.12+Math.random()*.12,0),material);
  if(kind==='wood')return new T.Mesh(new T.BoxGeometry(.08+Math.random()*.1,.035,.25+Math.random()*.3),[edges.wood,edges.wood,material,material,edges.wood,edges.wood]);
  if(kind==='metal')return new T.Mesh(new T.CylinderGeometry(.3,.29,.13+Math.random()*.16,8,1,true,Math.random()*6,.6+Math.random()*.6),material);
  const shape=new T.Shape();shape.moveTo(-.17,-.11);shape.lineTo(.06,-.16);shape.lineTo(.22,.03);shape.lineTo(.04,.2);shape.closePath();
@@ -27,7 +28,7 @@ export class ImpactEffects{
  }
  burst(pos,kind='ceramic',small=false){
   this.light.position.copy(pos);this.energy=small?4:13;
-  for(let i=0;i<(small?4:12);i++)this.add(pos,kind==='wood'||i%4===0);
+  for(let i=0;i<(small?4:12);i++)this.add(pos,kind==='wood'||kind==='stone'||i%4===0);
  }
  update(dt){
   this.energy*=Math.exp(-dt*18);this.light.intensity=this.energy;

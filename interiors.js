@@ -1,6 +1,7 @@
+import {heavyItem} from './heavy-items.js';
 import * as T from 'three';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
-import {makeExtraRoom,makeExtraItem} from './extra-rooms.js?v=rooms-20261016';
+import {makeExtraRoom,makeExtraItem} from './extra-rooms.js?v=heavy-20261016';
 import {finish,glass,ornament} from './finishes.js';
 const palettes={kitchen:{wall:0xf8e8cf,floor:0xf4e6ce,wood:0xce9561,accent:0x79b6a2},living:{wall:0xf3dfc8,floor:0xbb8358,wood:0x8a5842,accent:0x89a99b}};
 const woods=new Set([0xce9561,0xbb8358,0x8a5842,0xc59669,0x93643f,0x79573e,0xa17c55,0xe5c298,0x9a7453,0xb18e5f,0xaf8759]);
@@ -12,6 +13,7 @@ function cylinder(g,x,y,z,r1,r2,h,color){const m=new T.Mesh(new T.CylinderGeomet
 function labelTexture(title,subtitle,color,icon){const c=document.createElement('canvas');c.width=256;c.height=256;const x=c.getContext('2d');x.fillStyle=color;x.fillRect(0,0,256,256);x.fillStyle='#fff7df';x.fillRect(8,9,240,238);x.fillStyle=color;x.fillRect(8,9,240,46);x.textAlign='center';x.font='900 30px Arial';x.fillText(title,128,107);x.font='bold 16px Arial';x.fillText(subtitle,128,210);x.strokeStyle=color;x.lineWidth=2;x.strokeRect(28,126,200,52);x.font='bold 15px Georgia';x.fillText('PREMIUM QUALITY',128,148);x.font='12px Georgia';x.fillText('NET WT. 400 g',128,169);for(let i=0;i<36;i++){x.fillStyle=i%3?'#37372f':'#fff7df';x.fillRect(71+i*3,224,2,14);}const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;return t;}
 const templates=new Map();
 export function makeItem(type,theme,originalGeometry,originalMaterial){
+  if(type===51||type===52)return heavyItem(type);
   if(['bedroom','balcony','bathroom'].includes(theme))return makeExtraItem(type,theme);
   const key=theme+type;if(!templates.has(key)){
     const g=new T.Group();let shard;
