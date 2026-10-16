@@ -1,4 +1,4 @@
-# Splash Buster V2.0
+# 轟！家裡全碎了 · V2.0
 
 [Play V2.0](https://hadesmax1024jp11.github.io/splash-buster-h5/) · [V1.0 preserved release](https://github.com/hadesmax1024jp11/splash-buster-h5/releases/tag/v1.0)
 
