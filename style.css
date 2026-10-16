@@ -3,3 +3,5 @@
 .level-label{background:#493c32b8;border-radius:14px;padding:8px 18px;text-shadow:0 2px 2px #0005}.ammo{background:#493c32b8;border-radius:16px;padding:8px 12px;height:76px}.icon{background:#493c3299;box-shadow:0 4px 0 #44332533}#game::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,#ffce56,transparent 65%);opacity:var(--flash,0);pointer-events:none}body{background:#433d38}
 
 footer{justify-content:center;pointer-events:none}
+
+.version-badge{position:absolute;bottom:8px;right:12px;font-size:9px;letter-spacing:1.5px;opacity:.7;pointer-events:none}

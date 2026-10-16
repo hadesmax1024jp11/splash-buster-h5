@@ -1,12 +1,7 @@
-# Splash Buster H5
+# Splash Buster V2.0
 
-50 關室內砲擊試玩遊戲。
+[Play V2.0](https://hadesmax1024jp11.github.io/splash-buster-h5/) · [V1.0 preserved release](https://github.com/hadesmax1024jp11/splash-buster-h5/releases/tag/v1.0)
 
-線上遊玩：https://hadesmax1024jp11.github.io/splash-buster-h5/
+50-stage indoor cannon game. V2.0 adds beveled geometry, procedural wood, cloth and stone surfaces, physical metal and glass materials, environment reflections, detailed household items and a brass cannon. The levels, physics, difficulty progression and 0.85-second result timing are preserved.
 
-使用 Three.js 與 Cannon-es，所有資源均在根目錄，可直接使用 GitHub Pages 的 main 分支根目錄部署。
-
-包含廚房與客廳、50 組不重複配置、逐關增加的物件數量與重量、材質破碎、分層音效，以及動畫完成後結算。
-
-原遊戲素材仍屬原權利人。函式庫授權見 three-LICENSE.txt、cannon-es-LICENSE.txt。
-
+Original game assets remain the property of their rights holders. Third-party licenses: three-LICENSE.txt and cannon-es-LICENSE.txt.

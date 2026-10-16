@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#66c9df"><title>Splash Buster · H5</title><link rel="stylesheet" href="style.css"><script type="importmap">{"imports":{"three":"./three.module.js"}}</script></head>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#66c9df"><title>Splash Buster · V2.0</title><link rel="stylesheet" href="style.css"><script type="importmap">{"imports":{"three":"./three.module.js"}}</script></head>
 <body><main id="game"><canvas id="scene" aria-label="3D 遊戲場景；拖曳瞄準，放開發射" tabindex="0"></canvas>
 <header><button id="menu" class="icon" aria-label="選擇關卡">☰</button><div class="level-label"><span id="difficulty">SPLASH BUSTER</span><strong>第 <b id="level">1</b> / 50 關</strong></div><button id="sound" class="icon" aria-label="切換音效">♪</button></header>
 <div id="progress"><div id="fill"></div><span id="count">0 / 28</span></div>
-<div id="combo" aria-live="polite"></div><div id="hint">拖曳瞄準 · 放開發射</div>
+<div id="combo" aria-live="polite"></div><div class="version-badge">V2.0 · REALISTIC</div><div id="hint">拖曳瞄準 · 放開發射</div>
 <footer><div class="ammo"><span class="ball"></span><strong id="ammo">20</strong><small>剩餘炮彈</small></div></footer>
 <div id="loading" class="overlay"><section class="card"><div class="brand">SPLASH<br><em>BUSTER</em></div><p id="loadingText">正在載入室內場景…</p><div class="loader"></div></section></div>
 <dialog id="levels"><section class="card"><button class="close" id="closeLevels" aria-label="關閉">×</button><h2>選擇關卡</h2><p>50 關隨機配置 · 每關排列與物件組合不重複</p><div id="levelGrid"></div><label class="variant" hidden>關卡版本 <select id="variant"><option value="gp3">隨機 50 關</option></select></label><p class="note">進度自動保存在此瀏覽器</p></section></dialog>
