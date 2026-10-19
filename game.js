@@ -1,13 +1,15 @@
+import {loadKitchenAssets} from './kitchen-v5.js';
 import * as THREE from 'three';
 import {OBJLoader} from './OBJLoader.js';
-import {GamePhysics} from './physics.js?v=heavy-20261016';
-import {makeRoom,makeItem,makeRealCannon} from './interiors.js?v=heavy-20261016';
+import {GamePhysics} from './physics.js?v=v5-20261019';
+import {makeRoom,makeItem,makeRealCannon} from './interiors.js?v=v5-20261019';
 import {finish as surfaceFinish} from './finishes.js';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
 import {RoomEnvironment} from './RoomEnvironment.js';
 import {damageBadge} from './heavy-items.js';
-import {fragment,ImpactEffects} from './effects.js?v=heavy-20261016';
-import {materialKind} from './rules.js?v=heavy-20261016';
+import {fragment,ImpactEffects} from './effects.js?v=v5-20261019';
+import {materialKind as originalMaterialKind} from './rules.js?v=v5-20261019';
+function materialKind(type,theme){return theme==='kitchen'&&type!==51&&type!==52?(type===2?'ceramic':'metal'):originalMaterialKind(type,theme);}
 const themeNames={kitchen:'KITCHEN · 廚房',living:'LIVING ROOM · 客廳',bedroom:'BEDROOM · 臥室',balcony:'BALCONY · 陽台',bathroom:'BATHROOM · 浴室'};
 const $=id=>document.getElementById(id),canvas=$('scene');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.setClearColor(0x8bdbeb);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.9;
@@ -25,7 +27,7 @@ function impact(block,kind,speed){if(speed>3)effects.burst(block.body.position,m
 function geometryFromObj(obj){let mesh;obj.traverse(x=>{if(x.isMesh&&!mesh)mesh=x;});const g=mesh.geometry.clone();g.computeBoundingBox();const size=g.boundingBox.getSize(new THREE.Vector3()),center=g.boundingBox.getCenter(new THREE.Vector3());g.translate(-center.x,-center.y,-center.z);g.scale(1/size.x,1/size.y,1/size.z);g.computeVertexNormals();return g;}
 async function material(name,opts={}){const tex=await textureLoader.loadAsync(`tex_diffuse_t1_${name}.png`);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return new THREE.MeshStandardMaterial({map:tex,roughness:.55,metalness:.05,...opts});}
 function objectStyle(type){if(type===1)return ['can','can'];if(type===2)return ['cone','cone'];if(type===3)return ['square','square'];if(type===41)return ['box','box'];return ['jar',({11:'blue',12:'pink',13:'yellow',14:'red',15:'orange',16:'purple'})[type]||'blue'];}
-function meshFor(block){const [geo,mat]=objectStyle(block.data.type),m=makeItem(block.data.type,physics.level.theme,geometries[geo],materials[mat]);m.scale.set(...block.data.size);m.userData.block=block;block.mesh=m;worldVisual.add(m);return m;}
+function meshFor(block){const [geo,mat]=objectStyle(block.data.type),m=makeItem(block.data.type,physics.level.theme,geometries[geo],materials[mat],physics.blocks.indexOf(block)+levelIndex*2);m.scale.set(...block.data.size);m.userData.block=block;block.mesh=m;worldVisual.add(m);return m;}
 function box(w,h,d,color){return new THREE.Mesh(new RoundedBoxGeometry(w,h,d,2,Math.min(w,h,d)*.09),surfaceFinish(color,'wood'));}
 function addTable(t){const g=new THREE.Group();g.position.set(...t.pos);g.quaternion.set(...t.rot);const [w,d]=t.dim;const top=box(w+.12,.35,d+.12,0x9a7651);top.position.y=-.175;top.castShadow=true;top.receiveShadow=true;g.add(top);const green=box(w,.035,d,physics.level.theme==='kitchen'?0xe8dfc7:0xb58559);green.position.y=.01;green.receiveShadow=true;g.add(green);
 for(const x of [-1,1])for(const z of [-1,1]){const leg=box(.25,1.2,.25,0x886548);leg.position.set(x*(w/2-.2),-.94,z*(d/2-.2));leg.castShadow=true;g.add(leg);}worldVisual.add(g);}
@@ -59,10 +61,10 @@ let last=performance.now();function animate(now){requestAnimationFrame(animate);
 if(comboClear>=3&&physics.time-lastCombo<.8){$('combo').textContent=comboClear>=10?'SPLASH!':`${comboClear} 連擊！`;$('combo').classList.add('show');}else if(physics.time-lastCombo>1){comboClear=0;$('combo').classList.remove('show');$('combo').textContent='';}
 for(const p of particles){p.life-=dt;p.v.y-=18*dt;p.mesh.position.addScaledVector(p.v,dt);p.mesh.rotation.x+=dt*4;p.mesh.rotation.z+=dt*2;if(p.mesh.position.y<-1.4){p.mesh.position.y=-1.4;if(!p.bounced&&p.v.y<-2){p.bounced=true;effects.add(p.mesh.position,true);sound(p.kind==='wood'?'impact_wood_02':'impact_glass_03',.12,p.mesh.position.x/12);}p.v.y=Math.abs(p.v.y)*.2;p.v.x*=.9;p.v.z*=.9;}if(p.life<.3)p.mesh.scale.setScalar(Math.max(0,p.life/.3));if(p.life<=0){scene.remove(p.mesh);p.mesh.geometry.dispose();}}particles=particles.filter(p=>p.life>0);if(physics.result&&status==='playing'){status='settling';settleTime=0;down=false;aimDots.visible=target.visible=false;$('hint').style.opacity='0';}
 if(status==='settling'){settleTime+=dt;if(settleTime>=.65){for(const p of particles)p.life=Math.min(p.life,.18);}if(settleTime>=.85&&particles.length===0)finish(physics.result);}}renderer.render(scene,camera);}
-async function init(){try{[levels,settings]=await Promise.all(['campaign','physics'].map(n=>fetch(`${n}.json?v=heavy-20261016`).then(r=>{if(!r.ok)throw Error(n);return r.json();})));
+async function init(){try{[levels,settings]=await Promise.all(['campaign','physics'].map(n=>fetch(`${n}.json?v=v5-20261019`).then(r=>{if(!r.ok)throw Error(n);return r.json();})));
 await Promise.all(['can','cone','square','jar','box','cannon','base','wheel'].map(async n=>geometries[n]=geometryFromObj(await loader.loadAsync(`${n}.obj`))));
 await Promise.all([['can','can01'],['cone','conical01'],['square','square01'],['box','box01_yellow'],['cannon','cannon01'],...['blue','pink','yellow','red','orange','purple'].map(c=>[c,`jar01_${c}`])].map(async([k,n])=>materials[k]=await material(n,k==='can'?{metalness:.3,roughness:.36}:k==='cannon'?{roughness:.4}:{})));
-await preloadAudio();makeCannon();status='ready';
+await loadKitchenAssets();await preloadAudio();makeCannon();status='ready';
 $('loading').classList.add('ready');$('loadingText').textContent='5 大場景 · 50 關破壞挑戰';$('startGame').disabled=false;$('startGame').textContent='開始遊戲 ➜';
 $('startGame').onclick=()=>{if(status!=='ready')return;try{audio?.resume().catch(()=>{});loadLevel(0);renderer.render(scene,camera);$('loading').remove();document.querySelector('header').inert=false;canvas.inert=false;canvas.focus({preventScroll:true});last=performance.now();requestAnimationFrame(animate);}catch(error){console.error(error);status='ready';$('loadingText').textContent='啟動失敗，請重新整理後再試。';}};
 window.splashBuster={get state(){return {level:levelIndex+1,variant,status,ammo:physics?physics.level.ammo-physics.shots:0,remaining:physics?.remaining??0,total:physics?.blocks.length??0};},loadLevel,fire,get physics(){return physics;},get camera(){return camera;}};

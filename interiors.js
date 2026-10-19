@@ -1,3 +1,4 @@
+import {kitchenItem} from './kitchen-v5.js';
 import {heavyItem} from './heavy-items.js';
 import * as T from 'three';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
@@ -12,8 +13,9 @@ function cube(g,x,y,z,w,h,d,color){const m=new T.Mesh(new RoundedBoxGeometry(w,h
 function cylinder(g,x,y,z,r1,r2,h,color){const m=new T.Mesh(new T.CylinderGeometry(r1,r2,h,48),typeof color==='number'?mat(color):color);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;g.add(m);return m;}
 function labelTexture(title,subtitle,color,icon){const c=document.createElement('canvas');c.width=256;c.height=256;const x=c.getContext('2d');x.fillStyle=color;x.fillRect(0,0,256,256);x.fillStyle='#fff7df';x.fillRect(8,9,240,238);x.fillStyle=color;x.fillRect(8,9,240,46);x.textAlign='center';x.font='900 30px Arial';x.fillText(title,128,107);x.font='bold 16px Arial';x.fillText(subtitle,128,210);x.strokeStyle=color;x.lineWidth=2;x.strokeRect(28,126,200,52);x.font='bold 15px Georgia';x.fillText('PREMIUM QUALITY',128,148);x.font='12px Georgia';x.fillText('NET WT. 400 g',128,169);for(let i=0;i<36;i++){x.fillStyle=i%3?'#37372f':'#fff7df';x.fillRect(71+i*3,224,2,14);}const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;return t;}
 const templates=new Map();
-export function makeItem(type,theme,originalGeometry,originalMaterial){
+export function makeItem(type,theme,originalGeometry,originalMaterial,variant=0){
   if(type===51||type===52)return heavyItem(type);
+  if(theme==='kitchen')return kitchenItem(type,variant);
   if(['bedroom','balcony','bathroom'].includes(theme))return makeExtraItem(type,theme);
   const key=theme+type;if(!templates.has(key)){
     const g=new T.Group();let shard;
