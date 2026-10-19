@@ -1,5 +1,5 @@
-import {householdItem} from './household-v5.js?v=3.6';
-import {kitchenItem} from './kitchen-v5.js?v=3.6';
+import {householdItem} from './household-v5.js?v=3.7';
+import {kitchenItem} from './kitchen-v5.js?v=3.7';
 import {heavyItem} from './heavy-items.js';
 import * as T from 'three';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';

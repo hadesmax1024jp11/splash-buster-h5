@@ -1,15 +1,15 @@
-import {createAtmosphere} from './atmosphere.js?v=v3.6-table-shadow-20261019';
-import {loadHouseholdAssets} from './household-v5.js?v=3.6';
-import {loadKitchenAssets} from './kitchen-v5.js?v=3.6';
+import {createAtmosphere} from './atmosphere.js?v=v3.7-table-shadow-20261019';
+import {loadHouseholdAssets} from './household-v5.js?v=3.7';
+import {loadKitchenAssets} from './kitchen-v5.js?v=3.7';
 import * as THREE from 'three';
-import {GamePhysics} from './physics.js?v=v3.6-ammo-20261019';
-import {makeRoom,makeItem,makeRealCannon} from './interiors.js?v=v3.6-breech-20261019';
+import {GamePhysics} from './physics.js?v=v3.7-ammo-20261019';
+import {makeRoom,makeItem,makeRealCannon} from './interiors.js?v=v3.7-breech-20261019';
 import {finish as surfaceFinish} from './finishes.js';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
 import {RoomEnvironment} from './RoomEnvironment.js';
 import {damageBadge} from './heavy-items.js';
-import {fragment,ImpactEffects} from './effects.js?v=v3.6-fragment-fire-20261019';
-import {materialKind as originalMaterialKind} from './rules.js?v=v3.6-ammo-20261019';
+import {fragment,ImpactEffects} from './effects.js?v=v3.7-fragment-fire-20261019';
+import {materialKind as originalMaterialKind} from './rules.js?v=v3.7-ammo-20261019';
 function materialKind(type,theme){if(type===51||type===52)return originalMaterialKind(type,theme);if(theme==='kitchen')return type===2?'ceramic':'metal';if(theme==='living'&&[11,13].includes(type))return 'glass';if(theme==='balcony')return [2,11].includes(type)?'metal':[3,41].includes(type)?'wood':'ceramic';if(theme==='bathroom'&&[1,2].includes(type))return 'ceramic';return originalMaterialKind(type,theme);}
 const themeNames={kitchen:'KITCHEN · 廚房',living:'LIVING ROOM · 客廳',bedroom:'BEDROOM · 臥室',balcony:'BALCONY · 陽台',bathroom:'BATHROOM · 浴室'};
 const $=id=>document.getElementById(id),canvas=$('scene');
@@ -57,7 +57,7 @@ function finish(result){status=result;aimDots.visible=target.visible=false;const
 function showLevels(){if(status==='loading'||status==='ready')return;$('levelGrid').replaceChildren(...levels[variant].map((l,i)=>{const b=document.createElement('button');b.textContent=i+1;b.className=(i===levelIndex?'active ':'')+(save[`${variant}-${i+1}`]?'done':'');b.setAttribute('aria-label',`第 ${i+1} 關`);const room=document.createElement('small');room.textContent=themeNames[l.theme].split(' · ')[1];b.append(room);b.title=room.textContent;b.onclick=()=>loadLevel(i);return b;}));$('levels').showModal();}
 let down=false;canvas.addEventListener('pointerdown',e=>{if(status!=='playing'||e.button!==0)return;down=true;canvas.setPointerCapture(e.pointerId);aimAt(e);});canvas.addEventListener('pointermove',e=>{if(status==='playing'&&(down||e.pointerType==='mouse'))aimAt(e);});canvas.addEventListener('pointerup',e=>{if(e.button===0&&down){down=false;aimAt(e);fire();}});canvas.addEventListener('pointercancel',()=>down=false);
 window.addEventListener('keydown',e=>{if(e.code==='Space'&&status==='playing'&&!$('levels').open&&!$('result').open){e.preventDefault();fire();}if(e.key.toLowerCase()==='r'&&status==='playing'&&!$('levels').open)loadLevel(levelIndex);});
-$('closeLevels').onclick=()=>$('levels').close();$('sound').onclick=()=>{muted=!muted;$('sound').textContent=muted?'×♪':'♪';$('sound').setAttribute('aria-pressed',String(muted));};$('variant').onchange=()=>{variant=$('variant').value;loadLevel(levelIndex);};$('retry').onclick=()=>loadLevel(levelIndex);$('next').onclick=()=>loadLevel((levelIndex+1)%levels[variant].length);window.addEventListener('resize',frameView);
+$('closeLevels').onclick=()=>$('levels').close();$('sound').onclick=()=>{muted=!muted;$('sound').textContent=muted?'×♪':'♪';$('sound').setAttribute('aria-pressed',String(muted));};$('variant').onchange=()=>{variant=$('variant').value;loadLevel(levelIndex);};$('retry').onclick=()=>{window.location.href='https://www.gametower.com.tw/games/pg/';};$('next').onclick=()=>loadLevel((levelIndex+1)%levels[variant].length);window.addEventListener('resize',frameView);
 let last=performance.now();function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.04);last=now;if(!document.hidden)atmosphere?.update(dt);effects.update(dt);if(physics&&(status==='playing'||status==='settling')&&!$('levels').open&&!document.hidden){physics.step(dt);for(const g of worldVisual.children)if(g.userData.tableId!==undefined){const table=physics.tables.find(t=>t.data.id===g.userData.tableId);g.quaternion.copy(table.body.quaternion);}for(const b of physics.blocks)if(!b.removed){b.mesh.position.copy(b.body.position);b.mesh.quaternion.copy(b.body.quaternion);if(b.reinforced&&b.hits&&b.mesh.userData.shownHits!==b.hits){if(b.mesh.userData.badge)b.mesh.remove(b.mesh.userData.badge);const badge=damageBadge(b.requiredHits-b.hits);b.mesh.add(badge);b.mesh.userData.badge=badge;b.mesh.userData.shownHits=b.hits;}}for(const b of balls){b.mesh.position.copy(b.ball.body.position);if(b.ball.removed){scene.remove(b.mesh);b.mesh.geometry.dispose();}}balls=balls.filter(b=>!b.ball.removed);barrel.position.z*=.8;shake*=.82;flash=Math.max(0,flash-dt);camera.position.copy(cameraHome).add(new THREE.Vector3((Math.random()-.5)*shake,(Math.random()-.5)*shake,0));$('game').style.setProperty('--flash',String(flash*2));
 if(comboClear>=3&&physics.time-lastCombo<.8){$('combo').textContent=comboClear>=10?'SPLASH!':`${comboClear} 連擊！`;$('combo').classList.add('show');}else if(physics.time-lastCombo>1){comboClear=0;$('combo').classList.remove('show');$('combo').textContent='';}
 for(const p of particles){if(p.trail&&p.life>.3){p.trailTime-=dt;if(p.trailTime<=0){effects.trail(p.mesh.position,p.kind);p.trailTime=.065;}}p.life-=dt;p.v.y-=18*dt;p.mesh.position.addScaledVector(p.v,dt);p.mesh.rotation.x+=dt*4;p.mesh.rotation.z+=dt*2;if(p.mesh.position.y<-1.4){p.mesh.position.y=-1.4;if(!p.bounced&&p.v.y<-2){p.bounced=true;effects.add(p.mesh.position,true);sound(p.kind==='wood'?'impact_wood_02':'impact_glass_03',.12,p.mesh.position.x/12);}p.v.y=Math.abs(p.v.y)*.2;p.v.x*=.9;p.v.z*=.9;}if(p.life<.3)p.mesh.scale.setScalar(Math.max(0,p.life/.3));if(p.life<=0){scene.remove(p.mesh);p.mesh.geometry.dispose();}}particles=particles.filter(p=>p.life>0);if(physics.result&&status==='playing'){status='settling';settleTime=0;down=false;aimDots.visible=target.visible=false;$('hint').style.opacity='0';}
@@ -65,7 +65,7 @@ if(status==='settling'){settleTime+=dt;if(settleTime>=.65){for(const p of partic
 function bounded(task,label,ms=25000){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error(label+' 載入逾時')),ms);Promise.resolve(task).then(v=>{clearTimeout(timer);resolve(v);},e=>{clearTimeout(timer);reject(e);});});}
 async function init(){try{
 $('loadingText').textContent='正在載入關卡資料…';
-[levels,settings]=await bounded(Promise.all(['campaign','physics'].map(n=>fetch(`${n}.json?v=v3.6-loadfix`,{signal:AbortSignal.timeout(20000)}).then(r=>{if(!r.ok)throw Error(n+' HTTP '+r.status);return r.json();}))),'關卡資料');
+[levels,settings]=await bounded(Promise.all(['campaign','physics'].map(n=>fetch(`${n}.json?v=v3.7-loadfix`,{signal:AbortSignal.timeout(20000)}).then(r=>{if(!r.ok)throw Error(n+' HTTP '+r.status);return r.json();}))),'關卡資料');
 // All five themes use procedural models; the legacy OBJ files/textures are no longer needed.
 materials.box=surfaceFinish(0xb28b60,'wood');
 $('loadingText').textContent='正在載入五大場景貼圖…';
