@@ -1,3 +1,4 @@
+import {householdItem} from './household-v5.js';
 import {kitchenItem} from './kitchen-v5.js';
 import {heavyItem} from './heavy-items.js';
 import * as T from 'three';
@@ -16,6 +17,7 @@ const templates=new Map();
 export function makeItem(type,theme,originalGeometry,originalMaterial,variant=0){
   if(type===51||type===52)return heavyItem(type);
   if(theme==='kitchen')return kitchenItem(type,variant);
+  if(['living','bedroom','balcony','bathroom'].includes(theme))return householdItem(type,theme);
   if(['bedroom','balcony','bathroom'].includes(theme))return makeExtraItem(type,theme);
   const key=theme+type;if(!templates.has(key)){
     const g=new T.Group();let shard;

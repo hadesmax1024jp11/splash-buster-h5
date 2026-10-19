@@ -1,9 +1,9 @@
 import * as C from './cannon-es.js';
-import {playableLevel,materialKind,requiredHits} from './rules.js?v=heavy-20261016';
+import {playableLevel,materialKind,requiredHits} from './rules.js?v=v5-stacks-20261019';
 export class GamePhysics {
   constructor(level, settings, onClear=()=>{}, onImpact=()=>{}) {
     if(!level.originalAmmo)level=playableLevel(level);this.onImpact=onImpact;
-    this.level=level;this.settings=settings;this.onClear=onClear;this.time=0;this.shots=0;this.lastShot=-99;this.cleared=0;this.blocks=[];this.balls=[];this.pending=new Map();
+    this.level=level;this.settings=settings;this.onClear=onClear;this.time=0;this.rotationAngle=0;this.shots=0;this.lastShot=-99;this.cleared=0;this.blocks=[];this.balls=[];this.pending=new Map();
     this.world=new C.World({gravity:new C.Vec3(0,settings.physics.gravityY,0),allowSleep:true});
     this.world.broadphase=new C.SAPBroadphase(this.world);this.world.solver.iterations=25;this.world.solver.tolerance=.0001;
     this.world.defaultContactMaterial.friction=.6;this.world.defaultContactMaterial.restitution=0;this.world.defaultContactMaterial.contactEquationStiffness=1e8;
@@ -40,14 +40,29 @@ export class GamePhysics {
     this.world.addBody(b);const ball={body:b,born:this.time};this.balls.push(ball);return ball;
   }
   remove(block,reason){if(block.removed)return;block.removed=true;this.cleared++;this.world.removeBody(block.body);this.onClear(block,reason);for(const n of this.blocks){if(!n.removed&&n.body.position.distanceTo(block.body.position)<2.5)n.body.wakeUp();}}
+  rotatePlatforms(dt){
+    if(!this.level.rotating)return;
+    const angle=this.level.rotationSpeed*dt,q=new C.Quaternion();q.setFromAxisAngle(new C.Vec3(0,1,0),angle);this.rotationAngle+=angle;
+    for(const t of this.tables){q.mult(t.body.quaternion,t.body.quaternion);t.body.aabbNeedsUpdate=true;}
+    for(const b of this.blocks){if(b.removed)continue;const center=new C.Vec3(...b.table.data.pos),body=b.body;
+      // Carry supported objects with the platform; airborne debris and projectiles remain in world space.
+      if(body.position.y>=center.y-.2&&Math.hypot(body.position.x-center.x,body.position.z-center.z)<Math.hypot(...b.table.data.dim.slice(0,2))){
+        const local=body.position.vsub(center);q.vmult(local,local);local.vadd(center,body.position);q.mult(body.quaternion,body.quaternion);q.vmult(body.velocity,body.velocity);q.vmult(body.angularVelocity,body.angularVelocity);body.aabbNeedsUpdate=true;
+      }
+      const home=b.home.vsub(center);q.vmult(home,home);home.vadd(center,b.home);
+    }
+    this.world.broadphase.dirty=true;
+  }
   step(dt){
     const steps=Math.max(1,Math.ceil(Math.min(dt,.05)*240)),h=Math.min(dt,.05)/steps;
-    for(let i=0;i<steps;i++){this.time+=h;this.world.step(h);for(const b of this.blocks)if(b.reinforced&&!b.removed){
+    for(let i=0;i<steps;i++){this.time+=h;this.rotatePlatforms(h);this.world.step(h);for(const b of this.blocks)if(b.reinforced&&!b.removed){
         // Keep heavy targets on the playable platform so they remain reachable for follow-up shots.
-        const t=b.table.data,px=t.pos[0],pz=t.pos[2],hx=t.dim[0]/2-b.data.size[0]*.55,hz=t.dim[1]/2-b.data.size[2]*.55;
-        const x=Math.max(px-hx,Math.min(px+hx,b.body.position.x)),z=Math.max(pz-hz,Math.min(pz+hz,b.body.position.z));
-        if(x!==b.body.position.x){b.body.position.x=x;b.body.velocity.x=0;}if(z!==b.body.position.z){b.body.position.z=z;b.body.velocity.z=0;}
+        const t=b.table.data,center=new C.Vec3(...t.pos),inverse=b.table.body.quaternion.inverse(),local=inverse.vmult(b.body.position.vsub(center));
+        const hx=t.dim[0]/2-b.data.size[0]*.55,hz=t.dim[1]/2-b.data.size[2]*.55;
+        const x=Math.max(-hx,Math.min(hx,local.x)),z=Math.max(-hz,Math.min(hz,local.z));
+        if(x!==local.x||z!==local.z){local.x=x;local.z=z;b.table.body.quaternion.vmult(local,local);local.vadd(center,b.body.position);b.body.velocity.x=b.body.velocity.z=0;}
         const minY=t.pos[1]+b.data.size[1]*.49;if(b.body.position.y<minY){b.body.position.y=minY;b.body.velocity.y=Math.max(0,b.body.velocity.y);}
+
       }for(const [b,r] of this.pending)this.remove(b,r);this.pending.clear();
       if(this.shots)for(const b of this.blocks)if(!b.removed){if(!b.reinforced&&(b.body.position.y<-.8||Math.abs(b.body.position.x)>25||Math.abs(b.body.position.z)>30))this.remove(b,'fall');else if(b.reinforced&&(b.body.position.y< -5||Math.abs(b.body.position.x)>14||Math.abs(b.body.position.z)>22)){b.body.position.copy(b.home);b.body.velocity.setZero();b.body.angularVelocity.setZero();}}
     }
