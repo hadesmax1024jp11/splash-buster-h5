@@ -1,5 +1,5 @@
 import * as C from './cannon-es.js';
-import {playableLevel,materialKind,requiredHits} from './rules.js?v=v3.2-20261019';
+import {playableLevel,materialKind,requiredHits} from './rules.js?v=v3.2-ammo-20261019';
 export const physicalMaterials={
   wood:{friction:.62,restitution:.10,drag:.035,rolling:.22},
   metal:{friction:.32,restitution:.22,drag:.015,rolling:.08},

@@ -2,14 +2,14 @@ import {loadHouseholdAssets} from './household-v5.js';
 import {loadKitchenAssets} from './kitchen-v5.js';
 import * as THREE from 'three';
 import {OBJLoader} from './OBJLoader.js';
-import {GamePhysics} from './physics.js?v=v3.2-20261019';
-import {makeRoom,makeItem,makeRealCannon} from './interiors.js?v=v3.2-20261019';
+import {GamePhysics} from './physics.js?v=v3.2-ammo-20261019';
+import {makeRoom,makeItem,makeRealCannon} from './interiors.js?v=v3.2-ammo-20261019';
 import {finish as surfaceFinish} from './finishes.js';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
 import {RoomEnvironment} from './RoomEnvironment.js';
 import {damageBadge} from './heavy-items.js';
-import {fragment,ImpactEffects} from './effects.js?v=v3.2-20261019';
-import {materialKind as originalMaterialKind} from './rules.js?v=v3.2-20261019';
+import {fragment,ImpactEffects} from './effects.js?v=v3.2-ammo-20261019';
+import {materialKind as originalMaterialKind} from './rules.js?v=v3.2-ammo-20261019';
 function materialKind(type,theme){if(type===51||type===52)return originalMaterialKind(type,theme);if(theme==='kitchen')return type===2?'ceramic':'metal';if(theme==='living'&&[11,13].includes(type))return 'glass';if(theme==='balcony')return [2,11].includes(type)?'metal':[3,41].includes(type)?'wood':'ceramic';if(theme==='bathroom'&&[1,2].includes(type))return 'ceramic';return originalMaterialKind(type,theme);}
 const themeNames={kitchen:'KITCHEN · 廚房',living:'LIVING ROOM · 客廳',bedroom:'BEDROOM · 臥室',balcony:'BALCONY · 陽台',bathroom:'BATHROOM · 浴室'};
 const $=id=>document.getElementById(id),canvas=$('scene');
@@ -63,7 +63,7 @@ let last=performance.now();function animate(now){requestAnimationFrame(animate);
 if(comboClear>=3&&physics.time-lastCombo<.8){$('combo').textContent=comboClear>=10?'SPLASH!':`${comboClear} 連擊！`;$('combo').classList.add('show');}else if(physics.time-lastCombo>1){comboClear=0;$('combo').classList.remove('show');$('combo').textContent='';}
 for(const p of particles){p.life-=dt;p.v.y-=18*dt;p.mesh.position.addScaledVector(p.v,dt);p.mesh.rotation.x+=dt*4;p.mesh.rotation.z+=dt*2;if(p.mesh.position.y<-1.4){p.mesh.position.y=-1.4;if(!p.bounced&&p.v.y<-2){p.bounced=true;effects.add(p.mesh.position,true);sound(p.kind==='wood'?'impact_wood_02':'impact_glass_03',.12,p.mesh.position.x/12);}p.v.y=Math.abs(p.v.y)*.2;p.v.x*=.9;p.v.z*=.9;}if(p.life<.3)p.mesh.scale.setScalar(Math.max(0,p.life/.3));if(p.life<=0){scene.remove(p.mesh);p.mesh.geometry.dispose();}}particles=particles.filter(p=>p.life>0);if(physics.result&&status==='playing'){status='settling';settleTime=0;down=false;aimDots.visible=target.visible=false;$('hint').style.opacity='0';}
 if(status==='settling'){settleTime+=dt;if(settleTime>=.65){for(const p of particles)p.life=Math.min(p.life,.18);}if(settleTime>=.85&&particles.length===0)finish(physics.result);}}renderer.render(scene,camera);}
-async function init(){try{[levels,settings]=await Promise.all(['campaign','physics'].map(n=>fetch(`${n}.json?v=v3.2-20261019`).then(r=>{if(!r.ok)throw Error(n);return r.json();})));
+async function init(){try{[levels,settings]=await Promise.all(['campaign','physics'].map(n=>fetch(`${n}.json?v=v3.2-ammo-20261019`).then(r=>{if(!r.ok)throw Error(n);return r.json();})));
 await Promise.all(['can','cone','square','jar','box','cannon','base','wheel'].map(async n=>geometries[n]=geometryFromObj(await loader.loadAsync(`${n}.obj`))));
 await Promise.all([['can','can01'],['cone','conical01'],['square','square01'],['box','box01_yellow'],['cannon','cannon01'],...['blue','pink','yellow','red','orange','purple'].map(c=>[c,`jar01_${c}`])].map(async([k,n])=>materials[k]=await material(n,k==='can'?{metalness:.3,roughness:.36}:k==='cannon'?{roughness:.4}:{})));
 await Promise.all([loadKitchenAssets(),loadHouseholdAssets()]);await preloadAudio();makeCannon();status='ready';

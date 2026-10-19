@@ -17,9 +17,7 @@ export function playableLevel(original,random=Math.random) {
       for(const cell of active){let y=0;cell.items.sort((a,b)=>b.size[0]*b.size[2]-a.size[0]*a.size[2]);for(const o of cell.items){o.pos=[cell.x,y+o.size[1]/2,cell.z];o.rot=[0,0,0,1];y+=o.size[1];}}
     }
   }
-  const previousHits=objects.reduce((n,o)=>n+(original.id>=11?(original.id>=31?3:2)+(o.type===51?1:0):1),0);
-  const previousAmmo=Math.max(original.ammo*2*(rotating?3:1),original.id>=11?Math.ceil(previousHits*1.3):0);
-  return {...original,objects,tables,rotating,rotationSpeed:rotating?-Math.PI*2/24:0,originalAmmo:original.ammo,ammo:Math.max(1,Math.ceil(previousAmmo/2)),theme:original.theme||(original.id<=10?'kitchen':'living'),easy:false};
+  return {...original,objects,tables,rotating,rotationSpeed:rotating?-Math.PI*2/24:0,originalAmmo:original.ammo,ammo:20+(original.id-1)*5,theme:original.theme||(original.id<=10?'kitchen':'living'),easy:false};
 }
 export function materialKind(type,theme) {
   if(type===51)return 'metal';
