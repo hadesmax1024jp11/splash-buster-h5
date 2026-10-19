@@ -65,6 +65,13 @@ export function createAtmosphere({scene,room,theme,sun,rim,hemi,renderer,random=
  }else{const s=selection.sky,w=selection.weather;skyColor=new T.Color(s.color);if(w!=='晴朗')skyColor.lerp(new T.Color(s.night?0x25334a:0x9fadb5),.5);sun.target.position.set(0,0,0);sun.target.updateMatrixWorld();rim.position.set(8,6,8);hemi.groundColor.set(0xb7a28b);sun.color.set(s.key);sun.intensity=s.power*(w==='晴朗'?1:.55);sun.position.set(s.name==='夕陽'?14:-9,s.name==='夕陽'?7:18,-8);rim.color.set(s.night?0x7599e8:0xb2d6e8);rim.intensity=s.night?.45:.7;hemi.color.set(s.night?0x7996c6:0xd9e8f1);hemi.intensity=s.night?.48:.8;scene.environmentIntensity=s.night?.22:.45;
   room.traverse(o=>{if(o.isMesh&&o.material.isMeshBasicMaterial){if(o.geometry.parameters.width===110)o.material.color.copy(skyColor);else o.material.color.lerp(new T.Color(s.night?0x253553:0xa7b5be),s.night?.8:.15);}});
   lamp(-5,-1.4,8,0xffca7d);lamp(5,-1.4,10,0xffca7d);
+  // A balcony overhead fixture keeps target silhouettes readable on the table at night.
+  const tableLight=new T.SpotLight(s.night?0xc1d6ff:0xffedcf,s.night?220:110,40,Math.PI/5,.35,1.2);
+  tableLight.position.set(-2,14,1.5);tableLight.target.position.set(0,0,2.8);tableLight.castShadow=true;
+  tableLight.shadow.mapSize.set(1024,1024);tableLight.shadow.camera.near=.5;tableLight.shadow.camera.far=40;
+  tableLight.shadow.bias=-.00008;tableLight.shadow.normalBias=.008;tableLight.shadow.radius=2;
+  g.add(tableLight,tableLight.target);shadowLights.push(tableLight);
+
   const disc=mesh(new T.SphereGeometry(s.night?.75:1.25,20,12),new T.MeshBasicMaterial({color:s.night?0xe5edff:0xffd99b}),-10,12,30);disc.castShadow=false;
   if(s.night){const data=[];for(let i=0;i<90;i++)data.push((random()-.5)*65,8+random()*18,35);const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(data,3));geometries.add(geo);const m=new T.PointsMaterial({color:0xdce8ff,size:.075});materials.add(m);g.add(new T.Points(geo,m));}
   if(w!=='晴朗')for(let i=0;i<8;i++){const cloud=mesh(new T.SphereGeometry(1,12,8),mat(s.night?0x354359:0xd7dce0),-20+i*6,13+random()*3,29);cloud.scale.set(4, .8,1.5);cloud.castShadow=false;moving.push({object:cloud,cloud:true,phase:i});}
