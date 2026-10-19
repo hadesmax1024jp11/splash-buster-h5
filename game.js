@@ -4,7 +4,7 @@ import {loadKitchenAssets} from './kitchen-v5.js';
 import * as THREE from 'three';
 import {OBJLoader} from './OBJLoader.js';
 import {GamePhysics} from './physics.js?v=v3.5-ammo-20261019';
-import {makeRoom,makeItem,makeRealCannon} from './interiors.js?v=v3.5-ammo-20261019';
+import {makeRoom,makeItem,makeRealCannon} from './interiors.js?v=v3.5-breech-20261019';
 import {finish as surfaceFinish} from './finishes.js';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
 import {RoomEnvironment} from './RoomEnvironment.js';

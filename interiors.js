@@ -83,6 +83,9 @@ export function makeRealCannon(){
  cube(g,0,-.45,0,1.55,.38,1.5,wood);
  const barrel=new T.Group();g.add(barrel);
  const tube=new T.Mesh(new T.CylinderGeometry(.37,.51,2.2,64,1,true),brass);tube.rotation.x=Math.PI/2;barrel.add(tube);
+ // Seal the camera-facing breech with a rounded solid cap; keep the muzzle open.
+ const breech=new T.Mesh(new T.SphereGeometry(.51,48,24),brass);breech.scale.z=.42;breech.position.z=-1.04;barrel.add(breech);
+ const breechBoss=new T.Mesh(new T.SphereGeometry(.115,24,16),iron);breechBoss.scale.z=.8;breechBoss.position.z=-1.25;barrel.add(breechBoss);
  for(const z of [-.92,-.55,.65,1.08]){const ring=new T.Mesh(new T.TorusGeometry(z>0?.38:.5,.055,12,64),iron);ring.position.z=z;barrel.add(ring);}
  const bore=new T.Mesh(new T.CircleGeometry(.34,48),new T.MeshStandardMaterial({color:0x101316,roughness:.9}));bore.position.z=.96;barrel.add(bore);
  for(const sign of [-1,1]){
