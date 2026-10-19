@@ -36,3 +36,5 @@ footer{bottom:max(24px,env(safe-area-inset-bottom));left:18px;right:auto}.ammo{h
 @media(max-height:600px){.loading-title{top:3%}.loading-title h1{font-size:27px;margin:7px 0}.loading-title h1 em{font-size:1.35em}.loading-title p{font-size:10px;margin:5px 0}.loading-edition{font-size:9px}.loading-status{bottom:4%}.start-button{font-size:18px;padding:12px 8px;margin:8px 0 12px}.loading-status p{margin:7px 0!important}}
 
 .header-spacer{width:48px;flex-shrink:0}@media(max-width:360px){.header-spacer{width:41px}}
+
+#sceneMood{position:absolute;right:16px;bottom:28px;color:#fff4dc;background:#203b43b8;border:1px solid #fff4;border-radius:16px;padding:6px 12px;font-size:12px;pointer-events:none;text-shadow:0 1px 3px #0008}
