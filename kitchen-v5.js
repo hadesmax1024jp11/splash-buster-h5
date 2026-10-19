@@ -2,7 +2,7 @@ import * as T from 'three';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
 import {finish,glass,ornament} from './finishes.js';
 const cache=new Map();let atlas;
-export async function loadKitchenAssets(){atlas=await new T.ImageLoader().loadAsync('kitchen-cans-v5.png');}
+export async function loadKitchenAssets(){atlas=await new T.ImageLoader().loadAsync('kitchen-cans-v5.webp');}
 const metal=()=>finish(0xdce4e8,'metal'),dark=()=>finish(0x20272b,'metal');
 function enamel(color){const m=finish(color);m.roughness=.16;m.clearcoat=1;m.clearcoatRoughness=.1;m.envMapIntensity=1.5;return m;}
 function mesh(g,geo,mat,x=0,y=0,z=0){const m=new T.Mesh(geo,mat);m.position.set(x,y,z);g.add(m);return m;}

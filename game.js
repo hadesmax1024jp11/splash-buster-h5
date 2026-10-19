@@ -1,16 +1,15 @@
-import {createAtmosphere} from './atmosphere.js?v=v3.5-table-shadow-20261019';
-import {loadHouseholdAssets} from './household-v5.js';
-import {loadKitchenAssets} from './kitchen-v5.js';
+import {createAtmosphere} from './atmosphere.js?v=v3.6-table-shadow-20261019';
+import {loadHouseholdAssets} from './household-v5.js?v=3.6';
+import {loadKitchenAssets} from './kitchen-v5.js?v=3.6';
 import * as THREE from 'three';
-import {OBJLoader} from './OBJLoader.js';
-import {GamePhysics} from './physics.js?v=v3.5-ammo-20261019';
-import {makeRoom,makeItem,makeRealCannon} from './interiors.js?v=v3.5-breech-20261019';
+import {GamePhysics} from './physics.js?v=v3.6-ammo-20261019';
+import {makeRoom,makeItem,makeRealCannon} from './interiors.js?v=v3.6-breech-20261019';
 import {finish as surfaceFinish} from './finishes.js';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
 import {RoomEnvironment} from './RoomEnvironment.js';
 import {damageBadge} from './heavy-items.js';
-import {fragment,ImpactEffects} from './effects.js?v=v3.5-fragment-fire-20261019';
-import {materialKind as originalMaterialKind} from './rules.js?v=v3.5-ammo-20261019';
+import {fragment,ImpactEffects} from './effects.js?v=v3.6-fragment-fire-20261019';
+import {materialKind as originalMaterialKind} from './rules.js?v=v3.6-ammo-20261019';
 function materialKind(type,theme){if(type===51||type===52)return originalMaterialKind(type,theme);if(theme==='kitchen')return type===2?'ceramic':'metal';if(theme==='living'&&[11,13].includes(type))return 'glass';if(theme==='balcony')return [2,11].includes(type)?'metal':[3,41].includes(type)?'wood':'ceramic';if(theme==='bathroom'&&[1,2].includes(type))return 'ceramic';return originalMaterialKind(type,theme);}
 const themeNames={kitchen:'KITCHEN · 廚房',living:'LIVING ROOM · 客廳',bedroom:'BEDROOM · 臥室',balcony:'BALCONY · 陽台',bathroom:'BATHROOM · 浴室'};
 const $=id=>document.getElementById(id),canvas=$('scene');
@@ -21,14 +20,12 @@ const effects=new ImpactEffects(scene);const rimLight=new THREE.DirectionalLight
 let atmosphere;
 const worldVisual=new THREE.Group();scene.add(worldVisual);let shake=0,flash=0,cameraHome=new THREE.Vector3(),physics,levels,settings,levelIndex=0,variant='gp3',status='loading',muted=false,audio,aim=new THREE.Vector3(0,2,1),origin=new THREE.Vector3(0,1.3,-10),cannon,barrel,balls=[],particles=[],save={},firstShot=true,lastCombo=0,comboClear=0,loadToken=0,settleTime=0;
 try{save=JSON.parse(localStorage.getItem('splashbuster-h5-progressive50-v1')||'{}');}catch{}
-const geometries={},materials={},loader=new OBJLoader(),textureLoader=new THREE.TextureLoader(),ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
+const geometries={},materials={},ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
 const audioBuffers={},audioTimes={};let master,echo;
 async function preloadAudio(){audio??=new AudioContext();master=audio.createDynamicsCompressor();master.threshold.value=-14;master.ratio.value=5;master.connect(audio.destination);echo=audio.createDelay(.3);echo.delayTime.value=.085;const wet=audio.createGain();wet.gain.value=.15;echo.connect(wet);wet.connect(master);await Promise.all(['shoot_01','big_shoot','impact_can_01','impact_glass_03','impact_wood_02','impact_rock_01','break_can_01','break_can_03','break_glass_01','break_glass_03','break_wood_01','break_wood_03','new_level_start','result_win_01'].map(async n=>{try{const data=await fetch(`spb_sfx_${n}.wav`,{signal:AbortSignal.timeout(15000)}).then(r=>r.arrayBuffer());audioBuffers[n]=await audio.decodeAudioData(data);}catch{}}));}
 function sound(name,volume=.65,pan=0){if(muted||!audioBuffers[name])return;audio.resume();const now=audio.currentTime;if(now-(audioTimes[name]??-99)<.055)return;audioTimes[name]=now;const source=audio.createBufferSource(),gain=audio.createGain(),stereo=audio.createStereoPanner();source.buffer=audioBuffers[name];source.playbackRate.value=.94+Math.random()*.12;gain.gain.value=volume;stereo.pan.value=Math.max(-.7,Math.min(.7,pan));source.connect(gain);gain.connect(stereo);stereo.connect(master);stereo.connect(echo);source.start();}
 function thump(volume=.28,freq=85){if(muted||!audio)return;if(audio.currentTime-(audioTimes.thump??-1)<.06)return;audioTimes.thump=audio.currentTime;audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(28,audio.currentTime+.19);g.gain.setValueAtTime(volume,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.2);o.connect(g);g.connect(master);o.start();o.stop(audio.currentTime+.21);}
 function impact(block,kind,speed){if(speed>3)effects.burst(block.body.position,materialKind(block.data.type,physics.level.theme),true);const material=materialKind(block.data.type,physics.level.theme),pan=block.body.position.x/12;const name=material==='metal'?'impact_can_01':material==='wood'?'impact_wood_02':material==='stone'?'impact_rock_01':'impact_glass_03';sound(name,Math.min(.8,.2+speed/35),pan);if(kind==='floor'){thump(.12,65);shake=Math.max(shake,.025);}else{shake=Math.max(shake,Math.min(.09,speed*.0015));}if(block.mesh&&block.hits)block.mesh.scale.set(...block.data.size.map(v=>v*.985));}
-function geometryFromObj(obj){let mesh;obj.traverse(x=>{if(x.isMesh&&!mesh)mesh=x;});const g=mesh.geometry.clone();g.computeBoundingBox();const size=g.boundingBox.getSize(new THREE.Vector3()),center=g.boundingBox.getCenter(new THREE.Vector3());g.translate(-center.x,-center.y,-center.z);g.scale(1/size.x,1/size.y,1/size.z);g.computeVertexNormals();return g;}
-async function material(name,opts={}){const tex=await textureLoader.loadAsync(`tex_diffuse_t1_${name}.png`);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return new THREE.MeshStandardMaterial({map:tex,roughness:.55,metalness:.05,...opts});}
 function objectStyle(type){if(type===1)return ['can','can'];if(type===2)return ['cone','cone'];if(type===3)return ['square','square'];if(type===41)return ['box','box'];return ['jar',({11:'blue',12:'pink',13:'yellow',14:'red',15:'orange',16:'purple'})[type]||'blue'];}
 function meshFor(block){const [geo,mat]=objectStyle(block.data.type),m=makeItem(block.data.type,physics.level.theme,geometries[geo],materials[mat],physics.blocks.indexOf(block)+levelIndex*2);m.scale.set(...block.data.size);m.userData.block=block;block.mesh=m;worldVisual.add(m);return m;}
 function box(w,h,d,color){return new THREE.Mesh(new RoundedBoxGeometry(w,h,d,2,Math.min(w,h,d)*.09),surfaceFinish(color,'wood'));}
@@ -68,7 +65,7 @@ if(status==='settling'){settleTime+=dt;if(settleTime>=.65){for(const p of partic
 function bounded(task,label,ms=25000){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error(label+' 載入逾時')),ms);Promise.resolve(task).then(v=>{clearTimeout(timer);resolve(v);},e=>{clearTimeout(timer);reject(e);});});}
 async function init(){try{
 $('loadingText').textContent='正在載入關卡資料…';
-[levels,settings]=await bounded(Promise.all(['campaign','physics'].map(n=>fetch(`${n}.json?v=v3.5-loadfix`,{signal:AbortSignal.timeout(20000)}).then(r=>{if(!r.ok)throw Error(n+' HTTP '+r.status);return r.json();}))),'關卡資料');
+[levels,settings]=await bounded(Promise.all(['campaign','physics'].map(n=>fetch(`${n}.json?v=v3.6-loadfix`,{signal:AbortSignal.timeout(20000)}).then(r=>{if(!r.ok)throw Error(n+' HTTP '+r.status);return r.json();}))),'關卡資料');
 // All five themes use procedural models; the legacy OBJ files/textures are no longer needed.
 materials.box=surfaceFinish(0xb28b60,'wood');
 $('loadingText').textContent='正在載入五大場景貼圖…';

@@ -2,7 +2,7 @@ import * as T from 'three';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
 import {finish,glass} from './finishes.js';
 const atlases={},templates=new Map(),materials=new Map();
-export async function loadHouseholdAssets(){await Promise.all(['living','bedroom','balcony','bathroom'].map(async theme=>{atlases[theme]=await new T.ImageLoader().loadAsync(`${theme}-v5.png`);}));}
+export async function loadHouseholdAssets(){await Promise.all(['living','bedroom','balcony','bathroom'].map(async theme=>{atlases[theme]=await new T.ImageLoader().loadAsync(`${theme}-v5.webp`);}));}
 function surface(color,kind='ceramic'){const key=kind+color;if(!materials.has(key)){const m=finish(color,kind);if(kind==='ceramic'){m.clearcoat=1;m.clearcoatRoughness=.12;m.roughness=.17;}if(kind==='wood'){m.clearcoat=.5;m.roughness=.3;}materials.set(key,m);}return materials.get(key);}
 const gold=()=>surface(0xcdaa61,'metal'),cream=()=>surface(0xf6ecd5),iron=()=>surface(0x244b52,'metal');
 function add(g,geo,m,x=0,y=0,z=0){const o=new T.Mesh(geo,m);o.position.set(x,y,z);g.add(o);return o;}
