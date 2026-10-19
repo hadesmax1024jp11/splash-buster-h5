@@ -1,9 +1,9 @@
 import * as T from 'three';
 export const indoorMoods=[
- {name:'晨光',key:0xffedd1,power:2.1,fill:0xb9dfff,lamp:0xffc579},
- {name:'暖燈',key:0xffce95,power:1.25,fill:0xc9d8ff,lamp:0xffac57},
- {name:'月光',key:0xa3bcff,power:.65,fill:0x9bc7ef,lamp:0xffcf91},
- {name:'午後',key:0xffdfb0,power:2.5,fill:0xe7c5b4,lamp:0xffe2a9}
+ {name:'屋頂冷白光',key:0xb6d8ff,power:1.8,fill:0x92bfff,lamp:0xc9e5ff},
+ {name:'屋頂暖黃光',key:0xffbd72,power:1.9,fill:0xffb761,lamp:0xffd18a},
+ {name:'紫藍霓虹',key:0xb44dff,power:1.6,fill:0x42bfff,lamp:0xd46aff,neon:true},
+ {name:'桃紅青綠霓虹',key:0xff56ba,power:1.6,fill:0x42e8cf,lamp:0xff80d1,neon:true}
 ];
 export const skies=[
  {name:'晴日',color:0xa7d9eb,key:0xfff0cf,power:2.5,night:false},
@@ -50,10 +50,18 @@ export function createAtmosphere({scene,room,theme,sun,rim,hemi,renderer,random=
   for(const x of [-7,7]){box(x,2.8,12,.08,8,.08,wood);for(let y=0;y<6;y+=.7)box(x,y,12,2,.035,.035,wood);plant(x,-1.5,11,2);}
  }
  let skyColor,weatherGeometry,weatherPositions,weatherCount=0,snow=false;
- if(selection.mood){const m=selection.mood;skyColor=new T.Color(({kitchen:0xf3e6d1,living:0xefd9c1,bedroom:0xe6d9df,bathroom:0xdcebe7})[theme]);sun.color.set(m.key);sun.intensity=m.power;sun.position.set(m.name==='午後'?9:-9,14,-5);rim.color.set(m.fill);rim.intensity=.65;hemi.intensity=m.name==='月光'?.5:.75;hemi.color.set(m.fill);scene.environmentIntensity=.4;
-  lamp(-5,-1.4,8,m.lamp);lamp(5,-1.4,10,m.lamp);
-  const spot=new T.SpotLight(m.key,75,35,Math.PI/5,.65,1.4);spot.position.set(-8,9,10);spot.target.position.set(1,0,5);g.add(spot,spot.target);lights.push({light:spot,base:75});
- }else{const s=selection.sky,w=selection.weather;skyColor=new T.Color(s.color);if(w!=='晴朗')skyColor.lerp(new T.Color(s.night?0x25334a:0x9fadb5),.5);sun.color.set(s.key);sun.intensity=s.power*(w==='晴朗'?1:.55);sun.position.set(s.name==='夕陽'?14:-9,s.name==='夕陽'?7:18,-8);rim.color.set(s.night?0x7599e8:0xb2d6e8);rim.intensity=s.night?.45:.7;hemi.color.set(s.night?0x7996c6:0xd9e8f1);hemi.intensity=s.night?.48:.8;scene.environmentIntensity=s.night?.22:.45;
+ if(selection.mood){const m=selection.mood;skyColor=new T.Color(({kitchen:0xf3e6d1,living:0xefd9c1,bedroom:0xe6d9df,bathroom:0xdcebe7})[theme]).lerp(new T.Color(m.key),m.neon?.35:.15);
+  // Whole-room overhead illumination: no window/daylight preset or floor lamps.
+  sun.color.set(m.key);sun.intensity=m.power;sun.position.set(-4,16,4);sun.target.position.set(0,0,5);sun.target.updateMatrixWorld();
+  rim.color.set(m.fill);rim.intensity=m.neon?1.25:.65;rim.position.set(7,11,10);
+  hemi.color.set(m.fill);hemi.groundColor.set(m.key).multiplyScalar(.32);hemi.intensity=m.neon?.8:.95;scene.environmentIntensity=m.neon?.16:.27;
+  box(0,10,14,38,.22,12,mat(0xe0ddd5));
+  for(const side of [-1,1]){const color=side<0?m.key:m.fill,glow=new T.MeshStandardMaterial({color,emissive:color,emissiveIntensity:m.neon?2.2:1.4,roughness:.25});materials.add(glow);
+   // Long ceiling fixtures plus a visible cove strip across the back wall.
+   box(side*5,9.83,12,m.neon?.16:1.2,.08,8,glow);box(side*8,8.8,16.5,15,.12,.18,glow);
+   const overhead=new T.SpotLight(color,m.neon?210:180,40,Math.PI/2.8,.85,1.2);overhead.position.set(side*5,9.6,7);overhead.target.position.set(side*2,-1,4);g.add(overhead,overhead.target);lights.push({light:overhead,base:m.neon?210:180});
+  }
+ }else{const s=selection.sky,w=selection.weather;skyColor=new T.Color(s.color);if(w!=='晴朗')skyColor.lerp(new T.Color(s.night?0x25334a:0x9fadb5),.5);sun.target.position.set(0,0,0);sun.target.updateMatrixWorld();rim.position.set(8,6,8);hemi.groundColor.set(0xb7a28b);sun.color.set(s.key);sun.intensity=s.power*(w==='晴朗'?1:.55);sun.position.set(s.name==='夕陽'?14:-9,s.name==='夕陽'?7:18,-8);rim.color.set(s.night?0x7599e8:0xb2d6e8);rim.intensity=s.night?.45:.7;hemi.color.set(s.night?0x7996c6:0xd9e8f1);hemi.intensity=s.night?.48:.8;scene.environmentIntensity=s.night?.22:.45;
   room.traverse(o=>{if(o.isMesh&&o.material.isMeshBasicMaterial){if(o.geometry.parameters.width===110)o.material.color.copy(skyColor);else o.material.color.lerp(new T.Color(s.night?0x253553:0xa7b5be),s.night?.8:.15);}});
   lamp(-5,-1.4,8,0xffca7d);lamp(5,-1.4,10,0xffca7d);
   const disc=mesh(new T.SphereGeometry(s.night?.75:1.25,20,12),new T.MeshBasicMaterial({color:s.night?0xe5edff:0xffd99b}),-10,12,30);disc.castShadow=false;

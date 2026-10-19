@@ -1,4 +1,4 @@
-import {createAtmosphere} from './atmosphere.js?v=v3.2-scenes-20261019';
+import {createAtmosphere} from './atmosphere.js?v=v3.2-ceiling-20261019';
 import {loadHouseholdAssets} from './household-v5.js';
 import {loadKitchenAssets} from './kitchen-v5.js';
 import * as THREE from 'three';
