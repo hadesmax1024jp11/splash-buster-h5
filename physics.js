@@ -1,5 +1,13 @@
 import * as C from './cannon-es.js';
-import {playableLevel,materialKind,requiredHits} from './rules.js?v=v5-stacks-20261019';
+import {playableLevel,materialKind,requiredHits} from './rules.js?v=v3.2-20261019';
+export const physicalMaterials={
+  wood:{friction:.62,restitution:.10,drag:.035,rolling:.22},
+  metal:{friction:.32,restitution:.22,drag:.015,rolling:.08},
+  stone:{friction:.82,restitution:.035,drag:.025,rolling:.32},
+  ceramic:{friction:.46,restitution:.14,drag:.025,rolling:.16},
+  glass:{friction:.25,restitution:.18,drag:.02,rolling:.10},
+  projectile:{friction:.28,restitution:.28,drag:.008,rolling:.06}
+};
 export class GamePhysics {
   constructor(level, settings, onClear=()=>{}, onImpact=()=>{}) {
     if(!level.originalAmmo)level=playableLevel(level);this.onImpact=onImpact;
@@ -7,17 +15,24 @@ export class GamePhysics {
     this.world=new C.World({gravity:new C.Vec3(0,settings.physics.gravityY,0),allowSleep:true});
     this.world.broadphase=new C.SAPBroadphase(this.world);this.world.solver.iterations=25;this.world.solver.tolerance=.0001;
     this.world.defaultContactMaterial.friction=.6;this.world.defaultContactMaterial.restitution=0;this.world.defaultContactMaterial.contactEquationStiffness=1e8;
-    const floor=new C.Body({mass:0,shape:new C.Plane()});floor.quaternion.setFromEuler(-Math.PI/2,0,0);floor.position.y=-1.55;floor.ground=true;this.world.addBody(floor);
-    this.tables=level.tables.map(t=>{const b=new C.Body({mass:0,shape:new C.Box(new C.Vec3(t.dim[0]/2,.175,t.dim[1]/2)),position:new C.Vec3(t.pos[0],t.pos[1]-.175,t.pos[2]),quaternion:new C.Quaternion(...t.rot)});this.world.addBody(b);return {data:t,body:b};});
+    this.materials=Object.fromEntries(Object.keys(physicalMaterials).map(k=>[k,new C.Material(k)]));
+    const kinds=Object.keys(physicalMaterials);
+    for(let i=0;i<kinds.length;i++)for(let j=i;j<kinds.length;j++){
+      const a=physicalMaterials[kinds[i]],b=physicalMaterials[kinds[j]];
+      this.world.addContactMaterial(new C.ContactMaterial(this.materials[kinds[i]],this.materials[kinds[j]],{friction:Math.sqrt(a.friction*b.friction),restitution:Math.min(a.restitution,b.restitution),contactEquationStiffness:1e8}));
+    }
+    const floor=new C.Body({mass:0,material:this.materials.stone,shape:new C.Plane()});floor.quaternion.setFromEuler(-Math.PI/2,0,0);floor.position.y=-1.55;floor.ground=true;this.world.addBody(floor);
+    this.tables=level.tables.map(t=>{const b=new C.Body({mass:0,material:this.materials.wood,shape:new C.Box(new C.Vec3(t.dim[0]/2,.175,t.dim[1]/2)),position:new C.Vec3(t.pos[0],t.pos[1]-.175,t.pos[2]),quaternion:new C.Quaternion(...t.rot)});this.world.addBody(b);return {data:t,body:b};});
     for(const data of level.objects){
       const table=this.tables.find(t=>t.data.id===data.table),q=new C.Quaternion(...data.rot),pos=new C.Vec3(...data.pos);table.body.quaternion.vmult(pos,pos);pos.vadd(new C.Vec3(...table.data.pos),pos);table.body.quaternion.mult(q,q);
-      const volume=Math.max(1,Math.round(data.size.reduce((a,b)=>a*b,1)));const profile=settings.profiles.objects.find(p=>p.objectType===data.type);const masses=profile?.mass.massByVolume||[1];const mass=(masses[Math.min(volume-1,masses.length-1)]||1)*(level.massScale||1)*(level.id>=11?(data.type===51?6:data.type===52?4:2.5):1);
+      const volume=Math.max(1,Math.round(data.size.reduce((a,b)=>a*b,1)));const profile=settings.profiles.objects.find(p=>p.objectType===data.type);const masses=profile?.mass.massByVolume||[1];const mass=(masses[Math.min(volume-1,masses.length-1)]||1)*(level.massScale||1)*(level.id>=6?(data.type===51?6:data.type===52?4:2.5):1);
       const s=data.size.map(Math.abs);let shape;
       if([1,2,11,12,13,14,15,16].includes(data.type))shape=new C.Cylinder(s[0]*(data.type===2?.3:.485),s[0]*.485,s[1]*.98,12);
       else shape=new C.Box(new C.Vec3(s[0]*.495,s[1]*.495,s[2]*.495));
-      const body=new C.Body({mass,shape,position:pos,quaternion:q,linearDamping:0,angularDamping:.05,allowSleep:true,sleepSpeedLimit:.15,sleepTimeLimit:.8});
-      const reinforced=level.id>=11;const toughness=reinforced?requiredHits(data.type,level.id):(materialKind(data.type,level.theme)==='metal'?2:1);
-      const block={data,body,removed:false,hits:0,requiredHits:toughness,reinforced,hitBalls:new Set(),home:pos.clone(),table};body.block=block;body.sleep();this.world.addBody(body);this.blocks.push(block);
+      const kind=materialKind(data.type,level.theme),surface=physicalMaterials[kind]||physicalMaterials.wood;
+      const body=new C.Body({mass,material:this.materials[kind],shape,position:pos,quaternion:q,linearDamping:surface.drag,angularDamping:surface.rolling,allowSleep:true,sleepSpeedLimit:.15,sleepTimeLimit:.8});
+      const reinforced=level.id>=6;const toughness=reinforced?requiredHits(data.type,level.id):(materialKind(data.type,level.theme)==='metal'?2:1);
+      const block={data,body,surface,removed:false,hits:0,requiredHits:toughness,reinforced,hitBalls:new Set(),home:pos.clone(),table};body.block=block;body.sleep();this.world.addBody(body);this.blocks.push(block);
       body.addEventListener('collide',e=>{
         if(block.removed||this.shots===0)return;
         const speed=Math.abs(e.contact.getImpactVelocityAlongNormal()),kind=materialKind(data.type,level.theme);
@@ -35,7 +50,7 @@ export class GamePhysics {
   shoot(origin,direction){
     if(this.shots>=this.level.ammo||this.time-this.lastShot<.1)return null;
     this.lastShot=this.time;this.shots++;for(const block of this.blocks)if(!block.removed)block.body.wakeUp();
-    const b=new C.Body({mass:this.settings.physics.projectileMass,shape:new C.Sphere(.3),position:new C.Vec3(...origin),linearDamping:0,angularDamping:.05});
+    const b=new C.Body({mass:this.settings.physics.projectileMass,material:this.materials.projectile,shape:new C.Sphere(.3),position:new C.Vec3(...origin),linearDamping:0,angularDamping:.05});
     const d=new C.Vec3(...direction);d.normalize();d.scale(this.settings.physics.projectileInitialSpeed,b.velocity);b.projectile=true;
     this.world.addBody(b);const ball={body:b,born:this.time};this.balls.push(ball);return ball;
   }

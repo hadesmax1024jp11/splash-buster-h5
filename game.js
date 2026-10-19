@@ -2,14 +2,14 @@ import {loadHouseholdAssets} from './household-v5.js';
 import {loadKitchenAssets} from './kitchen-v5.js';
 import * as THREE from 'three';
 import {OBJLoader} from './OBJLoader.js';
-import {GamePhysics} from './physics.js?v=v5-stacks-20261019';
-import {makeRoom,makeItem,makeRealCannon} from './interiors.js?v=v5-stacks-20261019';
+import {GamePhysics} from './physics.js?v=v3.2-20261019';
+import {makeRoom,makeItem,makeRealCannon} from './interiors.js?v=v3.2-20261019';
 import {finish as surfaceFinish} from './finishes.js';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
 import {RoomEnvironment} from './RoomEnvironment.js';
 import {damageBadge} from './heavy-items.js';
-import {fragment,ImpactEffects} from './effects.js?v=v5-stacks-20261019';
-import {materialKind as originalMaterialKind} from './rules.js?v=v5-stacks-20261019';
+import {fragment,ImpactEffects} from './effects.js?v=v3.2-20261019';
+import {materialKind as originalMaterialKind} from './rules.js?v=v3.2-20261019';
 function materialKind(type,theme){if(type===51||type===52)return originalMaterialKind(type,theme);if(theme==='kitchen')return type===2?'ceramic':'metal';if(theme==='living'&&[11,13].includes(type))return 'glass';if(theme==='balcony')return [2,11].includes(type)?'metal':[3,41].includes(type)?'wood':'ceramic';if(theme==='bathroom'&&[1,2].includes(type))return 'ceramic';return originalMaterialKind(type,theme);}
 const themeNames={kitchen:'KITCHEN · 廚房',living:'LIVING ROOM · 客廳',bedroom:'BEDROOM · 臥室',balcony:'BALCONY · 陽台',bathroom:'BATHROOM · 浴室'};
 const $=id=>document.getElementById(id),canvas=$('scene');
@@ -46,10 +46,11 @@ for(let i=0;i<(kind==='glass'||kind==='ceramic'?18:12);i++){
 comboClear++;lastCombo=physics.time;updateHUD();}
 function updateHUD(){$('ammo').textContent=physics.level.ammo-physics.shots;$('count').textContent=`${physics.cleared} / ${physics.blocks.length}`;$('fill').style.width=`${physics.cleared/physics.blocks.length*100}%`;}
 function frameView(){if(!physics)return;const r=$('game').getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;
-const bounds=new THREE.Box3();for(const b of physics.blocks){const p=new THREE.Vector3(...b.data.pos),t=b.table.data,q=new THREE.Quaternion(...t.rot);p.applyQuaternion(q).add(new THREE.Vector3(...t.pos));bounds.expandByPoint(p.clone().add(new THREE.Vector3(...b.data.size).multiplyScalar(.5)));bounds.expandByPoint(p.clone().add(new THREE.Vector3(...b.data.size).multiplyScalar(-.5)));}
-const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());const rotationWidth=physics.level.rotating?Math.max(...physics.level.tables.map(t=>Math.hypot(t.dim[0],t.dim[1])))+1:size.x;const distance=Math.max(17,(rotationWidth+2.5)/(2*Math.tan(THREE.MathUtils.degToRad(22.5))*camera.aspect),size.y*(physics.level.rotating?2:1.6)+(physics.level.rotating?11:8));camera.position.set(0,center.y+distance*.36,center.z-distance);camera.lookAt(center.x,center.y-1.0,center.z);camera.updateProjectionMatrix();cameraHome.copy(camera.position);origin.set(0,.6,center.z-Math.min(10,distance*.46));cannon.position.copy(origin);updateAim();}
+// Identical world-space framing for every level; never fit the camera to stacks.
+camera.position.set(0,6.5,-14.2);camera.lookAt(0,1.5,2.8);camera.updateProjectionMatrix();cameraHome.copy(camera.position);origin.set(0,.6,-5.02);cannon.position.copy(origin);updateAim();}
+
 function clearScene(){effects.clear();for(const child of [...worldVisual.children]){worldVisual.remove(child);if(!child.userData.block)child.traverse(x=>{if(x.isMesh){x.geometry.dispose();x.material.dispose();}});}for(const b of balls){scene.remove(b.mesh);b.mesh.geometry.dispose();}balls=[];for(const p of particles){scene.remove(p.mesh);p.mesh.geometry.dispose();}particles=[];}
-function loadLevel(index){loadToken++;shake=0;settleTime=0;clearScene();levelIndex=index;status='playing';firstShot=true;comboClear=0;$('combo').classList.remove('show');$('combo').textContent='';$('hint').style.opacity='1';$('hint').textContent=index>=10?'重物關卡 · 連續命中 2 次以上擊碎':'拖曳瞄準 · 放開發射';$('result').close();$('levels').close();physics=new GamePhysics(levels[variant][index],settings,debris,impact);physics.blocks.forEach(meshFor);physics.blocks.forEach(b=>{b.mesh.position.copy(b.body.position);b.mesh.quaternion.copy(b.body.quaternion);});physics.level.tables.forEach(addTable);if(physics.level.rotating)$('hint').textContent='旋轉挑戰 · 三倍物件 · 順時針旋轉';
+function loadLevel(index){loadToken++;shake=0;settleTime=0;clearScene();levelIndex=index;status='playing';firstShot=true;comboClear=0;$('combo').classList.remove('show');$('combo').textContent='';$('hint').style.opacity='1';$('hint').textContent=index>=5?'重物關卡 · 連續命中 2 次以上擊碎':'拖曳瞄準 · 放開發射';$('result').close();$('levels').close();physics=new GamePhysics(levels[variant][index],settings,debris,impact);physics.blocks.forEach(meshFor);physics.blocks.forEach(b=>{b.mesh.position.copy(b.body.position);b.mesh.quaternion.copy(b.body.quaternion);});physics.level.tables.forEach(addTable);if(physics.level.rotating)$('hint').textContent='旋轉挑戰 · 三倍物件 · 順時針旋轉';
 worldVisual.add(makeRoom(physics.level.theme));renderer.setClearColor(({kitchen:0xf3e6d1,living:0xefd9c1,bedroom:0xe6d9df,balcony:0xb5d8e3,bathroom:0xdcebe7})[physics.level.theme]);document.body.dataset.theme=physics.level.theme;
 $('level').textContent=index+1;$('difficulty').textContent=themeNames[physics.level.theme]+(physics.level.rotating?' · ↻':'');aim.set(0,2,physics.level.tables[0].pos[2]);aimDots.visible=target.visible=true;frameView();updateHUD();}
 function fire(){if(status!=='playing')return;const d=direction(),b=physics.shoot(origin.toArray(),d.toArray());if(!b)return;const mesh=new THREE.Mesh(new THREE.SphereGeometry(.3,18,14),new THREE.MeshStandardMaterial({color:0x34465d,metalness:.65,roughness:.25}));mesh.castShadow=true;scene.add(mesh);balls.push({ball:b,mesh});effects.burst(origin.clone().addScaledVector(d,1.3),'metal');sound('shoot_01',.9);sound('big_shoot',.3);thump(.5,105);shake=.15;flash=.12;$('hint').style.opacity='0';firstShot=false;barrel.position.z=-.25;updateHUD();}
@@ -62,7 +63,7 @@ let last=performance.now();function animate(now){requestAnimationFrame(animate);
 if(comboClear>=3&&physics.time-lastCombo<.8){$('combo').textContent=comboClear>=10?'SPLASH!':`${comboClear} 連擊！`;$('combo').classList.add('show');}else if(physics.time-lastCombo>1){comboClear=0;$('combo').classList.remove('show');$('combo').textContent='';}
 for(const p of particles){p.life-=dt;p.v.y-=18*dt;p.mesh.position.addScaledVector(p.v,dt);p.mesh.rotation.x+=dt*4;p.mesh.rotation.z+=dt*2;if(p.mesh.position.y<-1.4){p.mesh.position.y=-1.4;if(!p.bounced&&p.v.y<-2){p.bounced=true;effects.add(p.mesh.position,true);sound(p.kind==='wood'?'impact_wood_02':'impact_glass_03',.12,p.mesh.position.x/12);}p.v.y=Math.abs(p.v.y)*.2;p.v.x*=.9;p.v.z*=.9;}if(p.life<.3)p.mesh.scale.setScalar(Math.max(0,p.life/.3));if(p.life<=0){scene.remove(p.mesh);p.mesh.geometry.dispose();}}particles=particles.filter(p=>p.life>0);if(physics.result&&status==='playing'){status='settling';settleTime=0;down=false;aimDots.visible=target.visible=false;$('hint').style.opacity='0';}
 if(status==='settling'){settleTime+=dt;if(settleTime>=.65){for(const p of particles)p.life=Math.min(p.life,.18);}if(settleTime>=.85&&particles.length===0)finish(physics.result);}}renderer.render(scene,camera);}
-async function init(){try{[levels,settings]=await Promise.all(['campaign','physics'].map(n=>fetch(`${n}.json?v=v5-stacks-20261019`).then(r=>{if(!r.ok)throw Error(n);return r.json();})));
+async function init(){try{[levels,settings]=await Promise.all(['campaign','physics'].map(n=>fetch(`${n}.json?v=v3.2-20261019`).then(r=>{if(!r.ok)throw Error(n);return r.json();})));
 await Promise.all(['can','cone','square','jar','box','cannon','base','wheel'].map(async n=>geometries[n]=geometryFromObj(await loader.loadAsync(`${n}.obj`))));
 await Promise.all([['can','can01'],['cone','conical01'],['square','square01'],['box','box01_yellow'],['cannon','cannon01'],...['blue','pink','yellow','red','orange','purple'].map(c=>[c,`jar01_${c}`])].map(async([k,n])=>materials[k]=await material(n,k==='can'?{metalness:.3,roughness:.36}:k==='cannon'?{roughness:.4}:{})));
 await Promise.all([loadKitchenAssets(),loadHouseholdAssets()]);await preloadAudio();makeCannon();status='ready';

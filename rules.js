@@ -2,7 +2,7 @@ function shuffled(items,random){const a=[...items];for(let i=a.length-1;i>0;i--)
 export function playableLevel(original,random=Math.random) {
   if(original.originalAmmo)return original;
   const rotating=original.id%5===0;
-  const tables=original.tables.map(t=>({...t,pos:[...t.pos],rot:[...t.rot],dim:[...t.dim]}));
+  const tables=original.tables.map(t=>({...t,pos:[...t.pos],rot:[...t.rot],dim:t.dim.map((v,i)=>i<2?v*Math.SQRT1_2:v)}));
   let objects=original.objects.flatMap(o=>Array.from({length:rotating?3:1},()=>({...o,size:[...o.size],rot:[...o.rot],pos:[...o.pos]})));
   if(original.generated){
     for(const table of tables){
@@ -17,8 +17,9 @@ export function playableLevel(original,random=Math.random) {
       for(const cell of active){let y=0;cell.items.sort((a,b)=>b.size[0]*b.size[2]-a.size[0]*a.size[2]);for(const o of cell.items){o.pos=[cell.x,y+o.size[1]/2,cell.z];o.rot=[0,0,0,1];y+=o.size[1];}}
     }
   }
-  const hits=objects.reduce((n,o)=>n+requiredHits(o.type,original.id),0);
-  return {...original,objects,tables,rotating,rotationSpeed:rotating?-Math.PI*2/24:0,originalAmmo:original.ammo,ammo:Math.max(original.ammo*2*(rotating?3:1),original.id>=11?Math.ceil(hits*1.3):0),theme:original.theme||(original.id<=10?'kitchen':'living'),easy:true};
+  const previousHits=objects.reduce((n,o)=>n+(original.id>=11?(original.id>=31?3:2)+(o.type===51?1:0):1),0);
+  const previousAmmo=Math.max(original.ammo*2*(rotating?3:1),original.id>=11?Math.ceil(previousHits*1.3):0);
+  return {...original,objects,tables,rotating,rotationSpeed:rotating?-Math.PI*2/24:0,originalAmmo:original.ammo,ammo:Math.max(1,Math.ceil(previousAmmo/2)),theme:original.theme||(original.id<=10?'kitchen':'living'),easy:false};
 }
 export function materialKind(type,theme) {
   if(type===51)return 'metal';
@@ -30,4 +31,4 @@ export function materialKind(type,theme) {
   return type>=11&&type<=16?'glass':type===1?'metal':type===2?'ceramic':'wood';
 }
 
-export function requiredHits(type,level){return level>=11?(level>=31?3:2)+(type===51?1:0):1;}
+export function requiredHits(type,level){return level>=6?(level>=31?3:2)+(type===51?1:0):1;}
